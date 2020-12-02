@@ -12,7 +12,7 @@ fn main() -> Result<(), io::Error> {
     for day in days {
         match day.as_str() {
             "1" | "day1" => day1::solve(),
-            "2" | "day2" => write!(io::stderr(), "sorry, day 2 not implemented :(\n")?,
+            "2" | "day2" => writeln!(io::stderr(), "sorry, day 2 not implemented :(")?,
             _ => writeln!(io::stderr(), "unknown argument: {}", &day)?
         }
     }
