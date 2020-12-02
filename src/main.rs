@@ -11,7 +11,7 @@ fn main() -> Result<(), io::Error> {
     if days.len() == 0 { days.push(Utc::now().day().to_string()); }
     for day in days {
         match day.as_str() {
-            "1" | "day1" => day1::solve(),
+            "1" | "day1" => day1::solve()?,
             "2" | "day2" => writeln!(io::stderr(), "sorry, day 2 not implemented :(")?,
             _ => writeln!(io::stderr(), "unknown argument: {}", &day)?
         }
