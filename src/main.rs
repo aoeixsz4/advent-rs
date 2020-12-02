@@ -13,7 +13,7 @@ fn main() -> Result<(), io::Error> {
         match day.as_str() {
             "1" | "day1" => day1::solve(),
             "2" | "day2" => write!(io::stderr(), "sorry, day 2 not implemented :(\n")?,
-            _ => write!(io::stderr(), "unknown argument: {}\n", &day)?
+            _ => writeln!(io::stderr(), "unknown argument: {}", &day)?
         }
     }
     Ok(())
