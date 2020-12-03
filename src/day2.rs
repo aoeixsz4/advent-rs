@@ -25,7 +25,6 @@ impl<'a> PassEntry<'a> {
         assert_eq!(split[1].len(), 1);
         let glyph = split[1].chars().nth(0).unwrap();
         split = split[0].split("-").collect();
-        println!("{:?}", split);
         let policy = PassPolicy {
             min: split[0].parse::<u32>().unwrap(),
             max: split[1].parse::<u32>().unwrap(),
@@ -60,6 +59,6 @@ pub fn solve() -> Result<(), io::Error> {
         let entry = PassEntry::new(&line);
         if entry.is_valid() { count += 1; }
     }
-    println!("{}", count);
+    println!("part1: {}", count);
     Ok(())
 }

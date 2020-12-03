@@ -31,11 +31,11 @@ pub fn solve() -> Result<(), io::Error> {
         .expect("couldn't open input file for day1 (should be inputs/day1)");
     data.sort(); // both part 1 and part 2 rely on a sorted array
     match part1(data.as_slice(), 2020) {
-        Some(solution) => println!("part1 answer: {}", solution.to_string()),
+        Some(solution) => println!("part1: {}", solution.to_string()),
         None => writeln!(io::stderr(), "attempt to solve day 1, part 1 failed")?
     }
     match part2(data.as_slice()) {
-        Some(solution) => println!("part2 answer: {}", solution.to_string()),
+        Some(solution) => println!("part2: {}", solution.to_string()),
         None => writeln!(io::stderr(), "attempt to solve day 1, part 2 failed")?
     }
     Ok(())

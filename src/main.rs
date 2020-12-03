@@ -12,10 +12,11 @@ fn main() -> Result<(), io::Error> {
     if days.len() == 0 { days.push(Utc::now().day().to_string()); }
     for day in days {
         match day.as_str() {
-            "1" | "day1" => day1::solve()?,
-            "2" | "day2" => day2::solve()?,
+            "1" | "day1" => { println!("\t\tDAY ONE"); day1::solve()? },
+            "2" | "day2" => { println!("\t\tDAY TWO"); day2::solve()? },
             _ => writeln!(io::stderr(), "unknown argument: {}", &day)?
         }
+        println!("");
     }
     Ok(())
 }
