@@ -18,17 +18,14 @@ impl<'a> PassEntry<'a> {
     pub fn new(input: &'a str) -> Self {
         let mut split: Vec<&'a str> = input.split(": ").collect();
         assert_eq!(split.len(), 2);
-        println!("{:?}", split);
         let policy_str = split[0];
         let password = split[1];
         split = policy_str.split(" ").collect();
         assert_eq!(split.len(), 2);
         assert_eq!(split[1].len(), 1);
-        println!("{:?}", split);
         let glyph = split[1].chars().nth(0).unwrap();
         split = split[0].split("-").collect();
         println!("{:?}", split);
-        assert_eq!(split.len(), 2);
         let policy = PassPolicy {
             min: split[0].parse::<u32>().unwrap(),
             max: split[1].parse::<u32>().unwrap(),
@@ -63,6 +60,6 @@ pub fn solve() -> Result<(), io::Error> {
         let entry = PassEntry::new(&line);
         if entry.is_valid() { count += 1; }
     }
-    println!("valid passwords: {}", count);
+    println!("{}", count);
     Ok(())
 }
