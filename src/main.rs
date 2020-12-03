@@ -1,4 +1,5 @@
 mod day1;
+mod day2;
 mod input;
 
 use chrono::{Datelike, Utc};
@@ -12,7 +13,7 @@ fn main() -> Result<(), io::Error> {
     for day in days {
         match day.as_str() {
             "1" | "day1" => day1::solve()?,
-            "2" | "day2" => writeln!(io::stderr(), "sorry, day 2 not implemented :(")?,
+            "2" | "day2" => day2::solve()?,
             _ => writeln!(io::stderr(), "unknown argument: {}", &day)?
         }
     }

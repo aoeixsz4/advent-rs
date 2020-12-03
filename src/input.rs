@@ -13,3 +13,16 @@ pub fn get_numeric_input(day: &str) -> Result<Vec<u32>, io::Error> {
     }
     Ok(output)
 }
+
+pub fn get_lines_input(day: &str) -> Result<Vec<String>, io::Error> {
+    let mut output = Vec::new();
+    let file_handle = File::open(format!("inputs/{}", day))?;
+    let reader = BufReader::new(file_handle);
+    for try_line in reader.lines() {
+        match try_line {
+            Ok(line) => output.push(line),
+            Err(e) => return Err(e)
+        }
+    }
+    Ok(output)
+}
