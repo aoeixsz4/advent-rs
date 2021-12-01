@@ -6,8 +6,7 @@ fn part1(data: &[u32]) -> usize {
 }
 
 fn part2(data: &[u32]) -> usize {
-    let sliding_window_sums: Vec<u32> = data.windows(3).map(|y| y.iter().sum()).collect();
-    part1(&sliding_window_sums)
+    data.windows(4).filter(|w| w[3] > w[0]).count()
 }
 
 pub fn solve() -> Result<(), io::Error> {
