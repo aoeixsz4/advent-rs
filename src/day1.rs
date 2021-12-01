@@ -1,15 +1,10 @@
-use std::io::{self, Write};
+use std::io;
 use crate::input;
 
 fn part1(data: &[u32]) -> u32 {
-    let (mut i, n, mut count) = (1, data.len(), 0);
-    while i < n {
-        if data[i] > data[i-1] {
-            count += 1;
-        }
-        i += 1;
-    }
-    count
+    data.windows(2).fold(0, |acc, x| {
+        if x[1] > x[0] { acc + 1 } else { acc }
+    })
 }
 
 //fn part2(data: &[u32]) -> Option<u32> {
@@ -23,9 +18,9 @@ fn part1(data: &[u32]) -> u32 {
 //}
 
 pub fn solve() -> Result<(), io::Error> {
-    let mut data = input::get_numeric_input("day1")
+    let data = input::get_numeric_input("day1")
         .expect("couldn't open input file for day1 (should be inputs/day1)");
-    println!("part1: {}", part1(data.as_slice()));
+    println!("part1: {}", part1(&data));
     //match part2(data.as_slice()) {
     //    Some(solution) => println!("part2: {}", solution.to_string()),
     //    None => writeln!(io::stderr(), "attempt to solve day 1, part 2 failed")?
