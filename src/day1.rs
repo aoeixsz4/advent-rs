@@ -7,7 +7,7 @@ fn part1(data: &[u32]) -> usize {
 
 fn part2(data: &[u32]) -> usize {
     let sliding_window_sums: Vec<u32> = data.windows(3).map(|y| y.iter().sum()).collect();
-    part1(sliding_window_sums.as_slice())
+    part1(&sliding_window_sums)
 }
 
 pub fn solve() -> Result<(), io::Error> {
