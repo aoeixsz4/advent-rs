@@ -1,13 +1,11 @@
 use std::io;
 use crate::input;
 
-fn part1(data: &[u32]) -> u32 {
-    data.windows(2).fold(0, |acc, x| {
-        if x[1] > x[0] { acc + 1 } else { acc }
-    })
+fn part1(data: &[u32]) -> usize {
+    data.windows(2).filter(|x| x[1] > x[0]).count()
 }
 
-fn part2(data: &[u32]) -> u32 {
+fn part2(data: &[u32]) -> usize {
     let sliding_window_sums: Vec<u32> = data.windows(3).map(|y| y.iter().sum()).collect();
     part1(sliding_window_sums.as_slice())
 }
