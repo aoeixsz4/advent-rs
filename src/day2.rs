@@ -2,11 +2,11 @@ use std::io;
 use crate::input;
 
 struct Position {
-    horizontal: u32,
-    depth: u32
+    horizontal: i64,
+    depth: i64
 }
 
-fn part1(data: &[String]) -> u32 {
+fn part1(data: &[String]) -> i64 {
     let mut pos = Position {
         horizontal: 0,
         depth: 0
@@ -15,9 +15,9 @@ fn part1(data: &[String]) -> u32 {
         .for_each(|s| {
             if let Some((direction, amount)) = s {
                 match direction {
-                    "forward" => pos.horizontal += amount.parse::<u32>().unwrap(),
-                    "up" => pos.depth -= amount.parse::<u32>().unwrap(),
-                    "down" => pos.depth += amount.parse::<u32>().unwrap(),
+                    "forward" => pos.horizontal += amount.parse::<i64>().unwrap(),
+                    "up" => pos.depth -= amount.parse::<i64>().unwrap(),
+                    "down" => pos.depth += amount.parse::<i64>().unwrap(),
                     _ => ()
                 }
             }
