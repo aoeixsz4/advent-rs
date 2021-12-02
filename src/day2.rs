@@ -11,13 +11,15 @@ fn part1(data: &[String]) -> u32 {
         horizontal: 0,
         depth: 0
     };
-    data.iter().map(|l| l.splitn(2, ' '))
-        .for_each(|mut s| {
-            match s.next().unwrap() {
-                "forward" => pos.horizontal += s.next().unwrap().parse::<u32>().unwrap(),
-                "up" => pos.depth -= s.next().unwrap().parse::<u32>().unwrap(),
-                "down" => pos.depth += s.next().unwrap().parse::<u32>().unwrap(),
-                _ => ()
+    data.iter().map(|l| l.split_once(' '))
+        .for_each(|s| {
+            if let Some((direction, amount)) = s {
+                match direction {
+                    "forward" => pos.horizontal += amount.parse::<u32>().unwrap(),
+                    "up" => pos.depth -= amount.parse::<u32>().unwrap(),
+                    "down" => pos.depth += amount.parse::<u32>().unwrap(),
+                    _ => ()
+                }
             }
         });
     pos.horizontal * pos.depth
