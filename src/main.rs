@@ -1,5 +1,5 @@
 mod day1;
-//mod day2;
+mod day2;
 //mod day3;
 mod input;
 
@@ -14,7 +14,7 @@ fn main() -> Result<(), io::Error> {
     for day in days {
         match day.as_str() {
             "1" | "day1" => { println!("\t\tDAY ONE"); day1::solve()? },
-            //"2" | "day2" => { println!("\t\tDAY TWO"); day2::solve()? },
+            "2" | "day2" => { println!("\t\tDAY TWO"); day2::solve()? },
             //"3" | "day3" => { println!("\t\tDAY TWO"); day3::solve()? },
             _ => writeln!(io::stderr(), "unknown argument: {}", &day)?
         }
