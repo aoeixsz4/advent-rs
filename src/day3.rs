@@ -3,9 +3,9 @@ use crate::input;
 use bitvec::prelude::*;
 
 const NR_BITS: usize = 12;
-const BITMASK: usize = 0xfff;
+const BITMASK: u16 = 0xfff;
 
-fn part1(data: &[String]) -> usize {
+fn part1(data: &[String]) -> i64 {
     let mut bit_counts: [usize; NR_BITS] = [0; NR_BITS];
     let len = data.len();
     data.iter().for_each(|bitstring| {
@@ -15,11 +15,11 @@ fn part1(data: &[String]) -> usize {
         })
     });
     let bitvec = bit_counts.map(|n| n > len/2)
-        .iter().collect::<BitVec<Msb0, usize>>();
-    let gamma = bitvec.as_raw_slice()[0] >> (64 - NR_BITS);
+        .iter().collect::<BitVec<Msb0, u16>>();
+    let gamma = bitvec.as_raw_slice()[0] >> (16 - NR_BITS);
     println!("gamma: {:#x}", gamma);
     let epsilon = gamma ^ BITMASK;
-    gamma * epsilon
+    gamma as i64 * epsilon as i64
 }
 
 pub fn solve() -> Result<(), io::Error> {
