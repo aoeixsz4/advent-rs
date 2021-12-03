@@ -14,7 +14,7 @@ fn part1(data: &[String]) -> usize {
             bit_counts[i] += 1
         })
     });
-    let mut bitvec = bit_counts.map(|n| n > len/2)
+    let bitvec = bit_counts.map(|n| n > len/2)
         .iter().collect::<BitVec<Msb0, usize>>();
     let gamma = bitvec.as_raw_slice()[0] >> (64 - NR_BITS);
     println!("gamma: {:#x}", gamma);
