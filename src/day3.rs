@@ -39,18 +39,14 @@ fn filter_bitfields(bitfields: &Vec<BitVec<Msb0, u16>>, popular: bool) -> i64 {
     let mut bitfields_subset = bitfields.clone();
     for i in 0 .. NR_BITS {
         let sublen = bitfields_subset.len();
-        if sublen == 1 { break; }
+        if sublen == 1 { return (bitfields_subset[0].as_raw_slice()[0] >> (16 - NR_BITS)) as i64; }
         let bit_count = get_bit_count(&bitfields_subset, i);
         bitfields_subset = bitfields_subset.into_iter().filter(|bit_vector| {
             let test = if popular { bit_vector[i] } else { !bit_vector[i] };
             if bit_count >= sublen - bit_count { test } else { !test }
         }).collect::<Vec<BitVec<Msb0, u16>>>();
     }
-    if bitfields_subset.len() == 1 {
-        (bitfields_subset[0].as_raw_slice()[0] >> (16 - NR_BITS)) as i64
-    } else {
-        0
-    }
+    0
 }
 
 fn part2(data: &[String]) -> i64 {
