@@ -42,22 +42,9 @@ fn filter_bitfields(bitfields: &Vec<BitVec<Msb0, u16>>, popular: bool) -> i64 {
         if sublen == 1 { break; }
         let bit_count = get_bit_count(&bitfields_subset, i);
         bitfields_subset = bitfields_subset.into_iter().filter(|bit_vector| {
-            if popular {
-                if bit_count >= sublen - bit_count {
-                    bit_vector[i]
-                } else {
-                    !bit_vector[i]
-                }
-            } else {
-                if bit_count >= sublen - bit_count {
-                    !bit_vector[i]
-                } else {
-                    bit_vector[i]
-                }
-            }
-        }
-        ).collect::<Vec<BitVec<Msb0, u16>>>();
-        println!("bit fields subset: {:#?}", bitfields_subset.iter().map(|x|x.to_string()).collect::<Vec<String>>());
+            let test = if popular { bit_vector[i] } else { !bit_vector[i] };
+            if bit_count >= sublen - bit_count { test } else { !test }
+        }).collect::<Vec<BitVec<Msb0, u16>>>();
     }
     if bitfields_subset.len() == 1 {
         (bitfields_subset[0].as_raw_slice()[0] >> (16 - NR_BITS)) as i64
