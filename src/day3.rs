@@ -15,49 +15,61 @@ fn get_bitfields(data: &[String]) -> Vec<BitVec<Msb0, u16>> {
     data.iter().map(|s| parse_bitstring(s)).collect()
 }
 
-fn get_bit_counts(data: Vec<BitVec<Msb0, u16>>) -> Vec<usize> {
+fn get_bit_counts(data: &Vec<BitVec<Msb0, u16>>) -> Vec<usize> {
     (0 .. NR_BITS).map(|i| {
-        data.iter().filter(|bit_vec|bit_vec[i]).count()
+        data.iter().filter(|bit_vec| bit_vec[i]).count()
     }).collect()
 }
 
+fn get_bit_count(data: &Vec<BitVec<Msb0, u16>>, index: usize) -> usize {
+    data.iter().filter(|bit_vec| bit_vec[index]).count()
+}
+
 fn part1(data: &[String]) -> i64 {
-    let bit_counts = get_bit_counts(get_bitfields(data));
-    println!("bit counts: {:#?}", bit_counts);
+    let bit_counts = get_bit_counts(&get_bitfields(data));
     let gamma = bit_counts.iter()
         .map(|n| *n > data.len()/2)
         .collect::<BitVec<Msb0, u16>>()
         .as_raw_slice()[0] >> (16 - NR_BITS);
-    println!("gamma: {:#x}", gamma);
     let epsilon = gamma ^ BITMASK;
     gamma as i64 * epsilon as i64
 }
 
-fn part2(data: &[String]) -> i64 {
-    let bitfields = get_bitfields(data);
-    let bit_counts = get_bit_counts(data.iter().map(|s| parse_bitstring(s)).collect());
+fn filter_bitfields(bitfields: &Vec<BitVec<Msb0, u16>>, popular: bool) -> i64 {
     let mut bitfields_subset = bitfields.clone();
     for i in 0 .. NR_BITS {
-        if bitfields_subset.len() == 1 { break; }
-        bitfields_subset = bitfields_subset.into_iter().filter(|bit_vector|
-            bit_counts[i] >= (bit_counts.len() / 2) && bit_vector[i]
+        let sublen = bitfields_subset.len();
+        if sublen == 1 { break; }
+        let bit_count = get_bit_count(&bitfields_subset, i);
+        bitfields_subset = bitfields_subset.into_iter().filter(|bit_vector| {
+            if popular {
+                if bit_count >= sublen - bit_count {
+                    bit_vector[i]
+                } else {
+                    !bit_vector[i]
+                }
+            } else {
+                if bit_count >= sublen - bit_count {
+                    !bit_vector[i]
+                } else {
+                    bit_vector[i]
+                }
+            }
+        }
         ).collect::<Vec<BitVec<Msb0, u16>>>();
+        println!("bit fields subset: {:#?}", bitfields_subset.iter().map(|x|x.to_string()).collect::<Vec<String>>());
     }
-    let mut oxygen_generator_rating = 0;
-    if bitfields_subset.len() > 0 {
-        oxygen_generator_rating = (bitfields_subset[0].as_raw_slice()[0] >> (16 - NR_BITS)) as i64;
+    if bitfields_subset.len() == 1 {
+        (bitfields_subset[0].as_raw_slice()[0] >> (16 - NR_BITS)) as i64
+    } else {
+        0
     }
-    bitfields_subset = bitfields.clone();
-    for i in 0 .. NR_BITS {
-        if bitfields_subset.len() == 1 { break; }
-        bitfields_subset = bitfields_subset.into_iter().filter(|bit_vector|
-            bit_counts[i] <= (bit_counts.len() / 2) && !bit_vector[i]
-        ).collect::<Vec<BitVec<Msb0, u16>>>();
-    }
-    let mut co2_scrubber_rating = 0;
-    if bitfields_subset.len() > 0 {
-        co2_scrubber_rating = (bitfields_subset[0].as_raw_slice()[0] >> (16 - NR_BITS)) as i64;
-    }
+}
+
+fn part2(data: &[String]) -> i64 {
+    let bitfields = get_bitfields(data);
+    let oxygen_generator_rating = filter_bitfields(&bitfields, true);
+    let co2_scrubber_rating = filter_bitfields(&bitfields, false);
     oxygen_generator_rating * co2_scrubber_rating
 }
 
