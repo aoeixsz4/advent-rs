@@ -1,4 +1,5 @@
 use std::io;
+use num::BigInt;
 use crate::input;
 
 fn part1(data: &[String]) -> usize {
@@ -17,22 +18,23 @@ fn part1(data: &[String]) -> usize {
     fishies.len()
 }
 
-fn part2(data: &[String]) -> u64 {
+fn part2(data: &[String]) -> BigUint {
     let fishies_init = data[0].split(',').map(|nr_string|nr_string.parse::<usize>().unwrap()).collect::<Vec<usize>>();
-    let mut fishy_grid: [u64; 9] = [0; 9];
+    let zero_vector = vec![0; 1];
+    let unit_vector = vec![1; 1];
+    let unit = BigUint::new(unit_vector);
+    let mut fishy_grid = (0 .. 9).map(|_x| BigUint::new(zero_vector.clone())).collect::<Vec<BigUint>>();
     for fish in fishies_init {
-        fishy_grid[fish] += 1;
+        fishy_grid[fish] += unit.clone();
     }
-    println!("{:#?}", fishy_grid);
     for _day in 0 .. 256 {
-        let new_spawns = fishy_grid[0];
+        let new_spawns = fishy_grid[0].clone();
         for i in 1 .. 9 {
-            fishy_grid[i-1] = fishy_grid[i];
+            fishy_grid[i-1] = fishy_grid[i].clone();
         }
-        fishy_grid[6] += new_spawns;
-        fishy_grid[8] = new_spawns;
+        fishy_grid[6] += new_spawns.clone();
+        fishy_grid[8] = new_spawns.clone();
     }
-    println!("{:#?}", fishy_grid);
     fishy_grid.iter().sum()
 }
 
