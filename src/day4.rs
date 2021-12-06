@@ -59,14 +59,19 @@ fn count_score(board: &Board) -> i64 {
     score
 }
 
-fn part1(data: &[String]) -> i64 {
+fn common_prep(data: &[String]) -> (Vec<i64>, Vec<Board>) {
     let mut data_iterator = data.split(|s| s.eq(""));
     let bingo_draws = data_iterator.next().unwrap()[0].split(",").map(|s|s.parse::<i64>().unwrap()).collect::<Vec<i64>>();
-    let mut boards = data_iterator.map(|board_slice|{
+    let boards = data_iterator.map(|board_slice|{
         board_slice.iter().map(|row_string|{
             row_string.split_whitespace().map(|cell_string| Cell::try_from(cell_string).unwrap()).collect::<Row>()
         }).collect::<Board>()
     }).collect::<Vec<Board>>();
+    (bingo_draws, boards)
+}
+
+fn part1(data: &[String]) -> i64 {
+    let (bingo_draws, mut boards) = common_prep(data);
     for n in bingo_draws {
         for mut board in &mut boards {
             mark(&mut board, n);
@@ -78,9 +83,30 @@ fn part1(data: &[String]) -> i64 {
     0
 }
 
+fn part2(data: &[String]) -> i64 {
+    let (bingo_draws, mut boards) = common_prep(data);
+    let mut last_winning_score = 0;
+    for n in bingo_draws {
+        let mut len = boards.len();
+        let mut i = 0;
+        while i < len {
+            mark(&mut boards[i], n);
+            if is_winner(&boards[i]) {
+                last_winning_score = count_score(&boards[i]) * n;
+                boards.remove(i);
+                len -= 1;
+            } else {
+                i += 1;
+            }
+        }
+    }
+    last_winning_score
+}
+
 pub fn solve() -> Result<(), io::Error> {
     let data = input::get_lines_input("day4")
         .expect("couldn't open input file for day4 (should be inputs/day4)");
     println!("part1: {}", part1(&data));
+    println!("part2: {}", part2(&data));
     Ok(())
 }
