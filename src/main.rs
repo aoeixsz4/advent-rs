@@ -5,6 +5,7 @@ mod day4;
 mod day5;
 mod day6;
 mod day7;
+mod day8;
 mod input;
 
 use chrono::{Datelike, Utc};
@@ -24,6 +25,7 @@ fn main() -> Result<(), io::Error> {
             "5" | "day5" => { println!("\t\tDAY FIVE"); day5::solve()? },
             "6" | "day6" => { println!("\t\tDAY SIX"); day6::solve()? },
             "7" | "day7" => { println!("\t\tDAY SEVEN"); day7::solve()? },
+            "8" | "day8" => { println!("\t\tDAY EIGHT"); day8::solve()? },
             _ => writeln!(io::stderr(), "unknown argument: {}", &day)?
         }
         println!("");

@@ -26,7 +26,7 @@ fn part2(data: &[String]) -> i64 {
 
 pub fn solve() -> Result<(), io::Error> {
     let data = input::get_lines_input("day7")
-        .expect("couldn't open input file for day6 (should be inputs/day7)");
+        .expect("couldn't open input file for day7 (should be inputs/day7)");
     println!("part1: {}", part1(&data));
     println!("part2: {}", part2(&data));
     Ok(())
