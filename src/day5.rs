@@ -31,9 +31,9 @@ fn part1(data: &[String]) -> i64 {
         if line_vec.end.y > max_y { max_y = line_vec.end.y; }
     }
     let mut grid = Vec::new();
-    for _j in 0 .. max_y {
+    for _j in 0 .. max_y + 1 {
         let mut row = Vec::new();
-        for _i in 0 .. max_x {
+        for _i in 0 .. max_x + 1 {
             row.push(0);
         }
         grid.push(row);
@@ -43,15 +43,20 @@ fn part1(data: &[String]) -> i64 {
             continue;
         }
         let mut cursor = Point { x: line_vec.start.x, y: line_vec.start.y };
-        while cursor.x != line_vec.end.x && cursor.y != line_vec.end.y {
+        while cursor.x != line_vec.end.x || cursor.y != line_vec.end.y {
             grid[cursor.y as usize][cursor.x as usize] += 1;
-            if cursor.y != line_vec.end.y { cursor.y += (line_vec.end.y - cursor.y)/(line_vec.end.y - cursor.y).abs() }
-            if cursor.x != line_vec.end.x { cursor.x += (line_vec.end.x - cursor.x)/(line_vec.end.x - cursor.x).abs() }
+            if cursor.y != line_vec.end.y {
+                cursor.y += (line_vec.end.y - cursor.y)/(line_vec.end.y - cursor.y).abs();
+            }
+            if cursor.x != line_vec.end.x {
+                cursor.x += (line_vec.end.x - cursor.x)/(line_vec.end.x - cursor.x).abs();
+            }
         }
+        grid[cursor.y as usize][cursor.x as usize] += 1;
     }
     let mut count = 0;
-    for j in 0 .. max_y {
-        for i in 0 .. max_x {
+    for j in 0 .. max_y + 1 {
+        for i in 0 .. max_x + 1 {
             if grid[j as usize][i as usize] > 1 { count += 1; }
         }
     }
