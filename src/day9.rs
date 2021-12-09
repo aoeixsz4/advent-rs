@@ -6,8 +6,23 @@ fn parse_input(data: &[String]) -> Vec<Vec<i64>> {
         line.split("").filter_map(|d|d.parse::<i64>().ok()).collect::<Vec<i64>>()
     }).collect::<Vec<Vec<i64>>>()
 }
+fn parse_input_2(data: &[String]) -> Vec<Vec<(i64, bool)>> {
+    data.iter().map(|line| {
+        line.split("").filter_map(|d|d.parse::<i64>().ok()).map(|d|(d, true)).collect::<Vec<(i64, bool)>>()
+    }).collect::<Vec<Vec<(i64, bool)>>>()
+}
 
 fn get_dimensions(map: &Vec<Vec<i64>>) -> (usize, usize) {
+    let size_y = map.len();
+    if size_y == 0 { panic!("got an empty map!"); }
+    let size_x = map[0].len();
+    for row in map {
+        if row.len() != size_x { panic!("got a mismatching row length!"); }
+    }
+    (size_y, size_x)
+}
+
+fn get_dimensions_2(map: &Vec<Vec<(i64, bool)>>) -> (usize, usize) {
     let size_y = map.len();
     if size_y == 0 { panic!("got an empty map!"); }
     let size_x = map[0].len();
@@ -34,9 +49,56 @@ fn part1(data: &[String]) -> i64 {
     risk_sum
 }
 
+fn count_basin_size(map: &mut Vec<Vec<(i64, bool)>>, mut y: usize, mut x: usize, size_y: usize, size_x: usize) -> usize {
+    let mut size = 0;
+    let mut neighbours: Vec<(usize, usize)> = Vec::new();
+    loop {
+        if y < size_y - 1 && map[y+1][x].1 && map[y+1][x].0 < 9 {
+            neighbours.push((y+1, x));
+        }
+        if y > 0 && map[y-1][x].1 && map[y-1][x].0 < 9 {
+            neighbours.push((y-1, x));
+        }
+        if x > 0 && map[y][x-1].1 && map[y][x-1].0 < 9 {
+            neighbours.push((y, x-1));
+        }
+        if map[y][x].1 {
+            size += 1;
+            map[y][x].1 = false;
+        }
+        if x < size_x - 1 && map[y][x+1].0 < 9 {
+            x += 1;
+        } else {
+            if let Some(tuple) = neighbours.pop() {
+                y = tuple.0;
+                x = tuple.1;
+            } else {
+                break;
+            }
+        }
+    }
+    size
+}
+
+fn part2(data: &[String]) -> usize {
+    let mut basin_sizes: Vec<usize> = Vec::new();
+    let mut map = parse_input_2(data);
+    let (size_y, size_x) = get_dimensions_2(&map);
+    for j in 0 .. size_y {
+        for i in 0 .. size_x {
+            if map[j][i].0 < 9 && map[j][i].1 {
+                basin_sizes.push(count_basin_size(&mut map, j, i, size_y, size_x));
+            }
+        }
+    }
+    basin_sizes.sort_by(|a, b| b.cmp(a));
+    basin_sizes[0] * basin_sizes[1] * basin_sizes[2]
+}
+
 pub fn solve() -> Result<(), io::Error> {
     let data = input::get_lines_input("day9")
         .expect("couldn't open input file for day9 (should be inputs/day9)");
     println!("part1: {}", part1(&data));
+    println!("part2: {}", part2(&data));
     Ok(())
 }
