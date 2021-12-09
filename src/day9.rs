@@ -92,7 +92,7 @@ fn part2(data: &[String]) -> usize {
         }
     }
     basin_sizes.sort_by(|a, b| b.cmp(a));
-    basin_sizes[0] * basin_sizes[1] * basin_sizes[2]
+    basin_sizes.iter().take(3).product()
 }
 
 pub fn solve() -> Result<(), io::Error> {
