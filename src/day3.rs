@@ -6,7 +6,7 @@ const NR_BITS: usize = 12;
 const BITMASK: u16 = 0xfff;
 
 fn parse_bitstring(s: &str) -> BitVec<Msb0, u16> {
-    s.chars().map_while(|c| {
+    s.chars().filter_map(|c| {
         if c == '1' { Some(true) } else if c == '0' { Some(false) } else { None }
     }).collect()
 }
