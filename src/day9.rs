@@ -6,6 +6,7 @@ fn parse_input(data: &[String]) -> Vec<Vec<i64>> {
         line.split("").filter_map(|d|d.parse::<i64>().ok()).collect::<Vec<i64>>()
     }).collect::<Vec<Vec<i64>>>()
 }
+
 fn parse_input_2(data: &[String]) -> Vec<Vec<(i64, bool)>> {
     data.iter().map(|line| {
         line.split("").filter_map(|d|d.parse::<i64>().ok()).map(|d|(d, true)).collect::<Vec<(i64, bool)>>()
