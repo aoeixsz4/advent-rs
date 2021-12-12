@@ -1,6 +1,5 @@
 use std::io;
 use std::collections::{HashMap, HashSet};
-use std::sync::{Arc, Mutex};
 use crate::input;
 
 #[derive(Debug)]
@@ -73,88 +72,56 @@ fn generate_cave_system(data: &[String]) -> CaveSystem {
     system
 }
 
-struct Tree {
-    path: Vec<String>,
-    children: Mutex<Vec<Arc<Tree>>>,
-    cave_name: String,
-}
-
-impl Tree {
-    pub fn init() -> Arc<Self> {
-        Arc::new(Tree {
-            path: vec!["start".to_string()],
-            children: Mutex::new(Vec::new()),
-            cave_name: "start".to_string()
-        })
-    }
-
-    pub fn add_children(self: Arc<Self>, system: &mut CaveSystem) -> Vec<Arc<Tree>> {
-        let mut children = Vec::new();
-        let cave = system.get_mut(&self.cave_name).unwrap();
-        if let CaveType::End = cave.node_type { return children; }
-        cave.visited = true;
-        for child_name in cave.links.clone() {
-            match cave_type_from_name(&child_name) {
-                CaveType::Small(_) if self.path.iter().filter(|s|s.as_str() == &child_name).count() > 1 => continue,
-                CaveType::Start => continue,
-                _ => ()
-            }
-            let mut new_path = self.path.clone();
-            new_path.push(child_name.clone());
-            let child = Arc::new(Tree { path: new_path, children: Mutex::new(Vec::new()), cave_name: child_name.clone() });
-            children.push(Arc::clone(&child));
-            let mut mutex_lock = self.children.lock().unwrap();
-            mutex_lock.push(child);
-        }
-        children
-    }
-}
-
-fn validate_part1_string(path: &str) -> bool {
-    let mut set = HashSet::new();
-    for cave in path.split(",") {
-        if is_upper(cave) { continue; }
-        if let Some(_) = set.get(cave) {
+fn is_small_cave_allowed(name: &str, path: &Vec<String>, double_visit: bool) -> bool {
+    if !path.contains(&name.to_string()) { return true; }
+    if !double_visit { return false; }
+    let mut cave_counts = HashSet::new();
+    for name in path.clone().into_iter().filter(|s|s.as_str() != "start" && s.as_str() != "end" && is_lower(&s)) {
+        if cave_counts.contains(&name) {
             return false;
         } else {
-            set.insert(cave.to_string());
+            cave_counts.insert(name.clone());
         }
     }
     true
 }
 
-fn validate_part2_string(path: &str) -> bool {
-    let mut set = HashMap::new();
-    for cave in path.split(",") {
-        if is_upper(cave) { continue; }
-        if let Some(count) = set.get(cave) {
-            set.insert(cave.to_string(), count + 1);
-        } else {
-            set.insert(cave.to_string(), 1);
-        }
+fn is_cave_allowed(name: &str, path: &Vec<String>, double_visit: bool) -> bool {
+    match cave_type_from_name(&name) {
+        CaveType::Start => false,
+        CaveType::Big(_) => true,
+        CaveType::Small(name) => is_small_cave_allowed(&name, path, double_visit),
+        CaveType::End => true,
     }
-    let total_count = set.len();
-    let singles_count = set.values().filter(|x| **x == 1).count();
-    let doubles_count = set.values().filter(|x| **x == 2).count();
-    doubles_count <= 1 && total_count == singles_count + doubles_count
 }
 
-fn common(data: &[String]) -> Vec<String> {
+fn get_children(system: &mut CaveSystem, path: &Vec<String>, name: &str, double_visit: bool) -> Vec<(String, Vec<String>)> {
+    let mut children = Vec::new();
+    let cave = system.get(&name.to_string()).unwrap();
+    if let CaveType::End = cave.node_type { return children; }
+    for child_name in cave.links.clone() {
+        if !is_cave_allowed(&child_name, path, double_visit) { continue; }
+        let mut new_path = path.clone();
+        new_path.push(child_name.clone());
+        children.push((child_name.clone(), new_path));
+    }
+    children
+}
+
+fn common(data: &[String], double_visit: bool) -> Vec<Vec<String>> {
     let mut system = generate_cave_system(data);
-    let tree_root = Tree::init();
     let mut layer_nodes = Vec::new();
     let mut complete_paths = Vec::new();
-    layer_nodes.push(tree_root);
+    layer_nodes.push(("start".to_string(), vec!["start".to_string()]));
     while layer_nodes.len() > 0 {
         let mut next_layer = Vec::new();
-        for node in layer_nodes {
-            let mut children = node.add_children(&mut system);
-            for child in children.clone().iter() {
-                if child.cave_name == "end" {
-                    complete_paths.push(child.path.join(","));
-                }
+        for (name, path) in layer_nodes {
+            if name == "end" {
+                complete_paths.push(path);
+            } else {
+                let mut children = get_children(&mut system, &path, &name, double_visit);
+                next_layer.append(&mut children);
             }
-            next_layer.append(&mut children);
         }
         layer_nodes = next_layer;
     }
@@ -162,18 +129,18 @@ fn common(data: &[String]) -> Vec<String> {
 }
 
 pub fn part1(data: &[String]) -> usize {
-    common(data).iter().filter(|x|validate_part1_string(x)).count()
+    common(data, false).len()
 }
 
 pub fn part2(data: &[String]) -> usize {
-    common(data).iter().filter(|x|validate_part2_string(x)).count()
+    common(data, true).len()
 }
 
 pub fn solve() -> Result<(), io::Error> {
     let data = input::get_lines_input("day12")
         .expect("couldn't open input file for day11 (should be inputs/day12)");
     println!("part1: {}", part1(&data));
-    println!("part2: {}", part1(&data));
+    println!("part2: {}", part2(&data));
     Ok(())
 }
 
