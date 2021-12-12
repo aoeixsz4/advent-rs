@@ -52,36 +52,31 @@ impl Cave {
         Cave { node_type: cave_type_from_name(name), links: HashSet::new() }
     }
 
-    pub fn new_with_link(name: &str, link: &str) -> Self {
-        let mut links = HashSet::new();
-        links.insert(link.to_string());
-        Cave { node_type: cave_type_from_name(name), links }
+    pub fn link(&mut self, link: &str) -> bool {
+        self.links.insert(link.to_string())
     }
 }
 
 type CaveSystem = HashMap<String, Cave>;
 
-fn insert_cave(system: &mut CaveSystem, mut cave: Cave) {
-    let name = cave_type_to_name(&cave.node_type);
-    if let Some(mut existing_cave) = system.get(name) {
-        let mut links = existing_cave.links.clone();
-        for link in &cave.links {
-            links.insert(link.to_string());
-        }
-        cave.links = links;
+fn get_or_create_cave<'a> (system: &'a mut CaveSystem, name: &str) -> Cave {
+    if let Some(cave) = system.remove(name) {
+        cave
+    } else {
+        Cave::new(name)
     }
-    system.insert(name.to_string(), cave);
 }
 
-fn generate_cave_system(data: &[&str]) -> CaveSystem {
+fn generate_cave_system(data: &[String]) -> CaveSystem {
     let mut system = CaveSystem::new();
-    data.iter().map(|l| l.split_once('-').unwrap())
-        .map(|(a, b)| {
-            (Cave::new_with_link(a, b), Cave::new_with_link(b, a))
-        }).for_each(|(cave_a, cave_b)| {
-            insert_cave(&mut system, cave_a);
-            insert_cave(&mut system, cave_b);
-        });
+    for (name_a, name_b) in data.iter().map(|l| l.split_once('-').unwrap()) {
+        let mut cave_a = get_or_create_cave(&mut system, name_a);
+        let mut cave_b = get_or_create_cave(&mut system, name_b);
+        cave_a.link(name_b);
+        cave_b.link(name_a);
+        system.insert(name_a.to_string(), cave_a);
+        system.insert(name_b.to_string(), cave_b);
+    }
     system
 }
 
@@ -115,8 +110,27 @@ mod tests {
             "b-d",
             "A-end",
             "b-end",
-        ];
-        let foo = generate_cave_system(&example_1);
-        println!("{:?}", foo);
+        ].into_iter().map(|s|s.to_string()).collect::<Vec<String>>();
+        let example_1_a_links = HashSet::from(["c", "start", "end", "b"].map(|s|s.to_string()));
+        let system_1 = generate_cave_system(&example_1);
+        assert_eq!(system_1.len(), 6);
+        assert_eq!(system_1.get("A").unwrap().links, example_1_a_links);
+
+        let example_2 = [
+            "dc-end",
+            "HN-start",
+            "start-kj",
+            "dc-start",
+            "dc-HN",
+            "LN-dc",
+            "HN-end",
+            "kj-sa",
+            "kj-HN",
+            "kj-dc",
+        ].into_iter().map(|s|s.to_string()).collect::<Vec<String>>();;
+        let example_2_kj_links = HashSet::from(["start", "sa", "HN", "dc"].map(|s|s.to_string()));
+        let system_2 = generate_cave_system(&example_2);
+        assert_eq!(system_2.len(), 7);
+        assert_eq!(system_2.get("kj").unwrap().links, example_2_kj_links);
     }
 }
