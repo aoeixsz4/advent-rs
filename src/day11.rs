@@ -134,7 +134,7 @@ pub fn solve() -> Result<(), io::Error> {
     let data = input::get_lines_input("day11")
         .expect("couldn't open input file for day11 (should be inputs/day11)");
     println!("part1: {}", part1(&data));
-    println!("part1: {}", part2(&data));
+    println!("part2: {}", part2(&data));
     Ok(())
 }
 

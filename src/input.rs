@@ -26,3 +26,8 @@ pub fn get_lines_input(day: &str) -> Result<Vec<String>, io::Error> {
     }
     Ok(output)
 }
+
+pub fn collect_into_array<T, const N: usize> (iter: impl IntoIterator<Item = T>) -> [T; N] {
+    let mut iter = iter.into_iter();
+    [(); N].map(|_| iter.next().unwrap())
+}
