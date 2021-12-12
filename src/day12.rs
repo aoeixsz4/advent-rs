@@ -1,5 +1,6 @@
 use std::io;
 use std::collections::{HashMap, HashSet};
+use std::sync::{Arc, Mutex};
 use crate::input;
 
 #[derive(Debug)]
@@ -32,24 +33,16 @@ fn cave_type_from_name(name: &str) -> CaveType {
     }
 }
 
-fn cave_type_to_name<'a> (cave_type: &'a CaveType) -> &'a str {
-    match &cave_type {
-        &CaveType::Start => "start",
-        &CaveType::End => "end",
-        &CaveType::Small(s) => &s,
-        &CaveType::Big(s) => &s,
-    }
-}
-
 #[derive(Debug)]
 struct Cave {
     node_type: CaveType,
-    links: HashSet<String>
+    links: HashSet<String>,
+    visited: bool,
 }
 
 impl Cave {
     pub fn new(name: &str) -> Self {
-        Cave { node_type: cave_type_from_name(name), links: HashSet::new() }
+        Cave { node_type: cave_type_from_name(name), links: HashSet::new(), visited: false }
     }
 
     pub fn link(&mut self, link: &str) -> bool {
@@ -80,112 +73,75 @@ fn generate_cave_system(data: &[String]) -> CaveSystem {
     system
 }
 
-fn is_partial_match(a: &Vec<String>, b: &Vec<String>) -> bool {
-    if a.len() < b.len() {
-        a.eq(&b[..a.len()])
-    } else {
-        b.eq(&a[..b.len()])
+struct Tree {
+    path: Vec<String>,
+    children: Mutex<Vec<Arc<Tree>>>,
+    cave_name: String,
+}
+
+impl Tree {
+    pub fn init() -> Arc<Self> {
+        Arc::new(Tree {
+            path: vec!["start".to_string()],
+            children: Mutex::new(Vec::new()),
+            cave_name: "start".to_string()
+        })
     }
-}
 
-fn is_any_partial_match(new_path: &Vec<String>, paths: &Vec<Vec<String>>) -> bool {
-    for extant in paths {
-        if is_partial_match(new_path, extant) { return true; }
-    }
-    false
-}
-
-fn backtrack(path: &mut Vec<String>) {
-    while let Some(last) = path.last() {
-        if !is_lower(last) { return; }
-        path.pop();
-    }
-}
-
-fn clone_and_push<T: Clone> (a: &Vec<T>, b: &T) -> Vec<T> {
-    let mut new = a.clone();
-    new.push(b.clone());
-    new
-}
-
-fn find_new_path(system: &CaveSystem, existing_paths: &Vec<Vec<String>>) -> Option<Vec<String>> {
-    let mut breadcrumbs = Vec::from(["start".to_string()]);
-    let mut position = system.get("start").unwrap();
-    loop {
-        println!("{}", breadcrumbs.join(","));
-        if let Some(new_direction) = position.links.clone().iter().filter(|d|
-            !"start".eq(d.as_str()) && !is_any_partial_match(&clone_and_push(&breadcrumbs, d), existing_paths)
-            && !(is_lower(d) && breadcrumbs.contains(d))
-        ).next() {
-            position = system.get(new_direction).unwrap();
-            breadcrumbs.push(new_direction.clone());
-            match position.node_type {
-                CaveType::End => return Some(breadcrumbs),
-                _ => continue,
+    pub fn add_children(self: Arc<Self>, system: &mut CaveSystem) -> Vec<Arc<Tree>> {
+        let mut children = Vec::new();
+        let cave = system.get_mut(&self.cave_name).unwrap();
+        if let CaveType::End = cave.node_type { return children; }
+        cave.visited = true;
+        for child_name in cave.links.clone() {
+            match cave_type_from_name(&child_name) {
+                CaveType::Small(_) if self.path.contains(&child_name) => continue,
+                CaveType::Start => continue,
+                _ => ()
             }
-        } else {
-            backtrack(&mut breadcrumbs);
-            if let Some(last) = breadcrumbs.last() {
-                position = system.get(last).unwrap();
-                continue;
-            }
+            let mut new_path = self.path.clone();
+            new_path.push(child_name.clone());
+            let child = Arc::new(Tree { path: new_path, children: Mutex::new(Vec::new()), cave_name: child_name.clone() });
+            children.push(Arc::clone(&child));
+            let mut mutex_lock = self.children.lock().unwrap();
+            mutex_lock.push(child);
         }
-        break;
+        children
     }
-    None
 }
 
 fn part1(data: &[String]) -> usize {
-    let system = generate_cave_system(data);
-    let mut paths = Vec::new();
-    while let Some(new_path) = find_new_path(&system, &paths) {
-        println!("{}", new_path.join(","));
-        paths.push(new_path);
+    let mut system = generate_cave_system(data);
+    let tree_root = Tree::init();
+    let mut layer_nodes = Vec::new();
+    let mut complete_paths = Vec::new();
+    layer_nodes.push(tree_root);
+    while layer_nodes.len() > 0 {
+        let mut next_layer = Vec::new();
+        for node in layer_nodes {
+            let mut children = node.add_children(&mut system);
+            for child in children.clone().iter() {
+                if child.cave_name == "end" {
+                    complete_paths.push(child.path.join(","));
+                }
+            }
+            next_layer.append(&mut children);
+        }
+        layer_nodes = next_layer;
     }
-    paths.len()
-}
-
-fn part2(data: &[String]) -> i64 {
-    0
+    complete_paths.len()
 }
 
 pub fn solve() -> Result<(), io::Error> {
     let data = input::get_lines_input("day12")
         .expect("couldn't open input file for day11 (should be inputs/day12)");
     println!("part1: {}", part1(&data));
-    //println!("part2: {}", part2(&data));
     Ok(())
 }
 
 #[cfg(test)]
 mod tests {
     use super::*;
-
-    #[test]
-    fn test_is_partial_match() {
-        let a = ["a", "b", "cd", "foo"].iter().map(|s|s.to_string()).collect::<Vec<String>>();
-        let b = ["a", "b", "cd"].iter().map(|s|s.to_string()).collect::<Vec<String>>();
-        let c = ["a", "b", "cd", "efg"].iter().map(|s|s.to_string()).collect::<Vec<String>>();
-        assert_eq!(is_partial_match(&b, &a), true);
-        assert_eq!(is_partial_match(&a, &b), true);
-        assert_eq!(is_partial_match(&c, &a), false);
-        assert_eq!(is_partial_match(&b, &c), true);
-    }
-
-    #[test]
-    fn test_is_any_partial_match() {
-        let a = ["a", "b", "cd", "foo"].iter().map(|s|s.to_string()).collect::<Vec<String>>();
-        let b = ["a", "b", "cd"].iter().map(|s|s.to_string()).collect::<Vec<String>>();
-        let c = ["a", "b", "cd", "efg"].iter().map(|s|s.to_string()).collect::<Vec<String>>();
-        let mut paths = Vec::new();
-        paths.push(a);
-        paths.push(b);
-        paths.push(c);
-        let d = ["a", "b"].iter().map(|s|s.to_string()).collect::<Vec<String>>();
-        let e = ["c", "d"].iter().map(|s|s.to_string()).collect::<Vec<String>>();
-        assert_eq!(is_any_partial_match(&d, &paths), true);
-        assert_eq!(is_any_partial_match(&e, &paths), false);
-    }
 
     #[test]
     fn test() {
@@ -219,8 +175,29 @@ mod tests {
         let system_2 = generate_cave_system(&example_2);
         assert_eq!(system_2.len(), 7);
         assert_eq!(system_2.get("kj").unwrap().links, example_2_kj_links);
+        assert_eq!(part1(&example_1), 10);
+        assert_eq!(part1(&example_2), 19);
 
-        println!("part1 ex1: {}", part1(&example_1));
-        println!("part1 ex2: {}", part1(&example_2))
+        let example_3 = [
+            "fs-end",
+            "he-DX",
+            "fs-he",
+            "start-DX",
+            "pj-DX",
+            "end-zg",
+            "zg-sl",
+            "zg-pj",
+            "pj-he",
+            "RW-he",
+            "fs-DX",
+            "pj-RW",
+            "zg-RW",
+            "start-pj",
+            "he-WI",
+            "zg-he",
+            "pj-fs",
+            "start-RW",
+        ].iter().map(|s|s.to_string()).collect::<Vec<String>>();
+        assert_eq!(part1(&example_3), 226);
     }
 }
