@@ -95,6 +95,13 @@ fn is_any_partial_match(new_path: &Vec<String>, paths: &Vec<Vec<String>>) -> boo
     false
 }
 
+fn backtrack(path: &mut Vec<String>) {
+    while let Some(last) = path.last() {
+        if !is_lower(last) { return; }
+        path.pop();
+    }
+}
+
 fn clone_and_push<T: Clone> (a: &Vec<T>, b: &T) -> Vec<T> {
     let mut new = a.clone();
     new.push(b.clone());
@@ -105,17 +112,22 @@ fn find_new_path(system: &CaveSystem, existing_paths: &Vec<Vec<String>>) -> Opti
     let mut breadcrumbs = Vec::from(["start".to_string()]);
     let mut position = system.get("start").unwrap();
     loop {
+        println!("{}", breadcrumbs.join(","));
         if let Some(new_direction) = position.links.clone().iter().filter(|d|
             !"start".eq(d.as_str()) && !is_any_partial_match(&clone_and_push(&breadcrumbs, d), existing_paths)
             && !(is_lower(d) && breadcrumbs.contains(d))
         ).next() {
-            //println!("currrent breadcrums {}, new dir: {}", breadcrumbs.join(","), &new_direction);
             position = system.get(new_direction).unwrap();
-            //println!("next position: {:?}", position);
             breadcrumbs.push(new_direction.clone());
             match position.node_type {
                 CaveType::End => return Some(breadcrumbs),
                 _ => continue,
+            }
+        } else {
+            backtrack(&mut breadcrumbs);
+            if let Some(last) = breadcrumbs.last() {
+                position = system.get(last).unwrap();
+                continue;
             }
         }
         break;
