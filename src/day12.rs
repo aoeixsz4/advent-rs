@@ -95,7 +95,7 @@ impl Tree {
         cave.visited = true;
         for child_name in cave.links.clone() {
             match cave_type_from_name(&child_name) {
-                CaveType::Small(_) if self.path.contains(&child_name) => continue,
+                CaveType::Small(_) if self.path.iter().filter(|s|s.as_str() == &child_name).count() > 1 => continue,
                 CaveType::Start => continue,
                 _ => ()
             }
@@ -110,7 +110,36 @@ impl Tree {
     }
 }
 
-fn part1(data: &[String]) -> usize {
+fn validate_part1_string(path: &str) -> bool {
+    let mut set = HashSet::new();
+    for cave in path.split(",") {
+        if is_upper(cave) { continue; }
+        if let Some(_) = set.get(cave) {
+            return false;
+        } else {
+            set.insert(cave.to_string());
+        }
+    }
+    true
+}
+
+fn validate_part2_string(path: &str) -> bool {
+    let mut set = HashMap::new();
+    for cave in path.split(",") {
+        if is_upper(cave) { continue; }
+        if let Some(count) = set.get(cave) {
+            set.insert(cave.to_string(), count + 1);
+        } else {
+            set.insert(cave.to_string(), 1);
+        }
+    }
+    let total_count = set.len();
+    let singles_count = set.values().filter(|x| **x == 1).count();
+    let doubles_count = set.values().filter(|x| **x == 2).count();
+    doubles_count <= 1 && total_count == singles_count + doubles_count
+}
+
+fn common(data: &[String]) -> Vec<String> {
     let mut system = generate_cave_system(data);
     let tree_root = Tree::init();
     let mut layer_nodes = Vec::new();
@@ -129,13 +158,22 @@ fn part1(data: &[String]) -> usize {
         }
         layer_nodes = next_layer;
     }
-    complete_paths.len()
+    complete_paths
+}
+
+pub fn part1(data: &[String]) -> usize {
+    common(data).iter().filter(|x|validate_part1_string(x)).count()
+}
+
+pub fn part2(data: &[String]) -> usize {
+    common(data).iter().filter(|x|validate_part2_string(x)).count()
 }
 
 pub fn solve() -> Result<(), io::Error> {
     let data = input::get_lines_input("day12")
         .expect("couldn't open input file for day11 (should be inputs/day12)");
     println!("part1: {}", part1(&data));
+    println!("part2: {}", part1(&data));
     Ok(())
 }
 
@@ -199,5 +237,8 @@ mod tests {
             "start-RW",
         ].iter().map(|s|s.to_string()).collect::<Vec<String>>();
         assert_eq!(part1(&example_3), 226);
+        assert_eq!(part2(&example_1), 36);
+        assert_eq!(part2(&example_2), 103);
+        assert_eq!(part2(&example_3), 3509);
     }
 }
