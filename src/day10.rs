@@ -1,7 +1,6 @@
-use std::io;
-use crate::input;
+const INPUT: &str = include_str!("day10.txt");
 
-fn score_line(line: &String) -> i64 {
+fn score_line(line: &str) -> i64 {
     let mut open_token_stack = Vec::new();
     for c in line.chars() {
         match c {
@@ -31,7 +30,7 @@ fn score_line(line: &String) -> i64 {
     0
 }
 
-fn get_completion_string(line: &String) -> Option<String> {
+fn get_completion_string(line: &str) -> Option<String> {
     let mut open_token_stack = Vec::new();
     for c in line.chars() {
         match c {
@@ -72,7 +71,7 @@ fn get_completion_string(line: &String) -> Option<String> {
     )
 }
 
-fn score_completion_string(comp: &String) -> i64 {
+fn score_completion_string(comp: &str) -> i64 {
     comp.chars().map(|c| match c {
         ')' => 1,
         ']' => 2,
@@ -84,11 +83,11 @@ fn score_completion_string(comp: &String) -> i64 {
     })
 }
 
-fn part1(data: &[String]) -> i64 {
+fn part1(data: &[&str]) -> i64 {
     data.iter().map(|l| score_line(l)).sum()
 }
 
-fn part2(data: &[String]) -> i64 {
+fn part2(data: &[&str]) -> i64 {
     let mut scores = data.iter().filter_map(|l|
         get_completion_string(l)
     ).map(|completion|
@@ -100,12 +99,10 @@ fn part2(data: &[String]) -> i64 {
     scores[(len-1)/2]
 }
 
-pub fn solve() -> Result<(), io::Error> {
-    let data = input::get_lines_input("day10")
-        .expect("couldn't open input file for day10 (should be inputs/day10)");
+pub fn solve() {
+    let data: Vec<&str> = INPUT.lines().collect();
     println!("part1: {}", part1(&data));
     println!("part2: {}", part2(&data));
-    Ok(())
 }
 
 #[cfg(test)]
@@ -114,19 +111,9 @@ mod tests {
 
     #[test]
     fn test() {
-        let input = [
-            "[({(<(())[]>[[{[]{<()<>>".to_string(),
-            "[(()[<>])]({[<{<<[]>>(".to_string(),
-            "{([(<{}[<>[]}>{[]{[(<()>".to_string(),
-            "(((({<>}<{<{<>}{[]{[]{}".to_string(),
-            "[[<[([]))<([[{}[[()]]]".to_string(),
-            "[{[{({}]{}}([{[{{{}}([]".to_string(),
-            "{<[[]]>}<{[{[{[]{()[[[]".to_string(),
-            "[<(<(<(<{}))><([]([]()".to_string(),
-            "<{([([[(<>()){}]>(<<{{".to_string(),
-            "<{([{{}}[<[[[<>{}]]]>[]]".to_string(),
-        ];
-        assert_eq!(part1(&input), 26397);
-        assert_eq!(part2(&input), 288957);
+        const EXAMPLE1: &str = include_str!("day10-ex1.txt");
+        let data: Vec<&str> = EXAMPLE1.lines().collect();
+        assert_eq!(part1(&data), 26397);
+        assert_eq!(part2(&data), 288957);
     }
 }

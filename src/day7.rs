@@ -1,7 +1,6 @@
-use std::io;
-use crate::input;
+const INPUT: &str = include_str!("day7.txt");
 
-fn part1(data: &[String]) -> i64 {
+fn part1(data: &[&str]) -> i64 {
     let crab_positions = data[0].split(',').map(|s|s.parse::<i64>().unwrap()).collect::<Vec<i64>>();
     let max = crab_positions.iter().max().unwrap();
     let mut fuel_costs: Vec<i64> = Vec::new();
@@ -11,7 +10,7 @@ fn part1(data: &[String]) -> i64 {
     *fuel_costs.iter().min().unwrap()
 }
 
-fn part2(data: &[String]) -> i64 {
+fn part2(data: &[&str]) -> i64 {
     let crab_positions = data[0].split(',').map(|s|s.parse::<i64>().unwrap()).collect::<Vec<i64>>();
     let max = crab_positions.iter().max().unwrap();
     let mut fuel_costs: Vec<i64> = Vec::new();
@@ -24,10 +23,8 @@ fn part2(data: &[String]) -> i64 {
     *fuel_costs.iter().min().unwrap()
 }
 
-pub fn solve() -> Result<(), io::Error> {
-    let data = input::get_lines_input("day7")
-        .expect("couldn't open input file for day7 (should be inputs/day7)");
+pub fn solve() {
+    let data: Vec<&str> = INPUT.lines().collect();
     println!("part1: {}", part1(&data));
     println!("part2: {}", part2(&data));
-    Ok(())
 }

@@ -1,5 +1,4 @@
-use std::io;
-use crate::input;
+const INPUT: &str = include_str!("day5.txt");
 
 #[derive(Clone)]
 struct Point {
@@ -13,7 +12,7 @@ struct LineVec {
     end: Point
 }
 
-fn part1(data: &[String]) -> i64 {
+fn part1(data: &[&str]) -> i64 {
     let line_vectors = data.iter().map(|line|{
         let (start, end) = line.split_once(" -> ").unwrap();
         let (start_x, start_y) = start.split_once(",").unwrap();
@@ -59,7 +58,7 @@ fn part1(data: &[String]) -> i64 {
     count
 }
 
-fn part2(data: &[String]) -> i64 {
+fn part2(data: &[&str]) -> i64 {
     let line_vectors = data.iter().map(|line|{
         let (start, end) = line.split_once(" -> ").unwrap();
         let (start_x, start_y) = start.split_once(",").unwrap();
@@ -102,10 +101,8 @@ fn part2(data: &[String]) -> i64 {
     count
 }
 
-pub fn solve() -> Result<(), io::Error> {
-    let data = input::get_lines_input("day5")
-        .expect("couldn't open input file for day5 (should be inputs/day5)");
+pub fn solve() {
+    let data: Vec<&str> = INPUT.lines().collect();
     println!("part1: {}", part1(&data));
     println!("part2: {}", part2(&data));
-    Ok(())
 }

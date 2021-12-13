@@ -1,13 +1,12 @@
-use std::io;
-use crate::input;
+const INPUT: &str = include_str!("day9.txt");
 
-fn parse_input(data: &[String]) -> Vec<Vec<i64>> {
+fn parse_input(data: &[&str]) -> Vec<Vec<i64>> {
     data.iter().map(|line| {
         line.split("").filter_map(|d|d.parse::<i64>().ok()).collect::<Vec<i64>>()
     }).collect::<Vec<Vec<i64>>>()
 }
 
-fn parse_input_2(data: &[String]) -> Vec<Vec<(i64, bool)>> {
+fn parse_input_2(data: &[&str]) -> Vec<Vec<(i64, bool)>> {
     data.iter().map(|line| {
         line.split("").filter_map(|d|d.parse::<i64>().ok()).map(|d|(d, true)).collect::<Vec<(i64, bool)>>()
     }).collect::<Vec<Vec<(i64, bool)>>>()
@@ -33,7 +32,7 @@ fn get_dimensions_2(map: &Vec<Vec<(i64, bool)>>) -> (usize, usize) {
     (size_y, size_x)
 }
 
-fn part1(data: &[String]) -> i64 {
+fn part1(data: &[&str]) -> i64 {
     let mut risk_sum = 0;
     let map = parse_input(data);
     let (size_y, size_x) = get_dimensions(&map);
@@ -81,7 +80,7 @@ fn count_basin_size(map: &mut Vec<Vec<(i64, bool)>>, mut y: usize, mut x: usize,
     size
 }
 
-fn part2(data: &[String]) -> usize {
+fn part2(data: &[&str]) -> usize {
     let mut basin_sizes: Vec<usize> = Vec::new();
     let mut map = parse_input_2(data);
     let (size_y, size_x) = get_dimensions_2(&map);
@@ -96,10 +95,8 @@ fn part2(data: &[String]) -> usize {
     basin_sizes.iter().take(3).product()
 }
 
-pub fn solve() -> Result<(), io::Error> {
-    let data = input::get_lines_input("day9")
-        .expect("couldn't open input file for day9 (should be inputs/day9)");
+pub fn solve() {
+    let data: Vec<&str> = INPUT.lines().collect();
     println!("part1: {}", part1(&data));
     println!("part2: {}", part2(&data));
-    Ok(())
 }

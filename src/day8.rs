@@ -1,5 +1,6 @@
-use std::{io, collections::HashMap};
-use crate::input;
+use std::collections::HashMap;
+
+const INPUT: &str = include_str!("day8.txt");
 
 fn count_identifiable_digits(output_digits: &Vec<Vec<&str>>) -> i64 {
     output_digits.iter().map(|entry|{
@@ -127,7 +128,7 @@ fn resolve_digit(display: &Vec<char>, digit_string: &str) -> i64 {
     }
 }
 
-fn part1(data: &[String]) -> i64 {
+fn part1(data: &[&str]) -> i64 {
     let mut wire_combinations = Vec::new();
     let mut output_digits = Vec::new();
     for entry in data {
@@ -138,7 +139,7 @@ fn part1(data: &[String]) -> i64 {
     count_identifiable_digits(&output_digits)
 }
 
-fn part2(data: &[String]) -> i64 {
+fn part2(data: &[&str]) -> i64 {
     let mut sum = 0;
     for entry in data {
         let (combinations_string, outputs_string) = entry.split_once("|").unwrap();
@@ -154,10 +155,8 @@ fn part2(data: &[String]) -> i64 {
     sum
 }
 
-pub fn solve() -> Result<(), io::Error> {
-    let data = input::get_lines_input("day8")
-        .expect("couldn't open input file for day8 (should be inputs/day8)");
+pub fn solve() {
+    let data: Vec<&str> = INPUT.lines().collect();
     println!("part1: {}", part1(&data));
     println!("part2: {}", part2(&data));
-    Ok(())
 }

@@ -1,10 +1,8 @@
-use std::io;
-use crate::input;
-
+const INPUT: &str = include_str!("day11.txt");
 const SIZE_Y: usize = 10;
 const SIZE_X: usize = 10;
 
-fn parse_input(data: &[String]) -> Vec<Vec<i64>> {
+fn parse_input(data: &[&str]) -> Vec<Vec<i64>> {
     data.iter().map(|line| {
         line.split("").filter_map(|d|d.parse::<i64>().ok()).collect::<Vec<i64>>()
     }).collect::<Vec<Vec<i64>>>()
@@ -107,7 +105,7 @@ fn is_all_zero(octopus_grid: &Vec<Vec<i64>>) -> bool {
     true
 }
 
-fn part1(data: &[String]) -> i64 {
+fn part1(data: &[&str]) -> i64 {
     let mut flashed_count = 0;
     let mut octopus_grid = parse_input(data);
     for _i in 0 .. 100 {
@@ -118,7 +116,7 @@ fn part1(data: &[String]) -> i64 {
     flashed_count
 }
 
-fn part2(data: &[String]) -> i64 {
+fn part2(data: &[&str]) -> i64 {
     let mut flashed_count = 0;
     let mut octopus_grid = parse_input(data);
     for i in 0 .. 1000 {
@@ -130,12 +128,10 @@ fn part2(data: &[String]) -> i64 {
     flashed_count
 }
 
-pub fn solve() -> Result<(), io::Error> {
-    let data = input::get_lines_input("day11")
-        .expect("couldn't open input file for day11 (should be inputs/day11)");
+pub fn solve() {
+    let data: Vec<&str> = INPUT.lines().collect();
     println!("part1: {}", part1(&data));
     println!("part2: {}", part2(&data));
-    Ok(())
 }
 
 #[cfg(test)]
@@ -144,18 +140,8 @@ mod tests {
 
     #[test]
     fn test() {
-        let input = [
-            "5483143223".to_string(),
-            "2745854711".to_string(),
-            "5264556173".to_string(),
-            "6141336146".to_string(),
-            "6357385478".to_string(),
-            "4167524645".to_string(),
-            "2176841721".to_string(),
-            "6882881134".to_string(),
-            "4846848554".to_string(),
-            "5283751526".to_string(),
-        ];
+        const EXAMPLE1: &str = include_str!("day11-ex1.txt");
+        let input: Vec<&str> = EXAMPLE1.lines().collect();
         assert_eq!(part1(&input), 1656);
         assert_eq!(part2(&input), 195);
     }

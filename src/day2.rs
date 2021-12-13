@@ -1,5 +1,4 @@
-use std::io;
-use crate::input;
+const INPUT: &str = include_str!("day2.txt");
 
 struct Position {
     horizontal: i64,
@@ -11,7 +10,7 @@ struct SubStatus {
     aim: i64
 }
 
-fn part1(data: &[String]) -> i64 {
+fn part1(data: &[&str]) -> i64 {
     let mut pos = Position { horizontal: 0, depth: 0 };
     data.iter().map(|l| l.split_once(' '))
         .for_each(|s| {
@@ -27,7 +26,7 @@ fn part1(data: &[String]) -> i64 {
     pos.horizontal * pos.depth
 }
 
-fn part2(data: &[String]) -> i64 {
+fn part2(data: &[&str]) -> i64 {
     let mut status = SubStatus {
         pos: Position { horizontal: 0, depth: 0 },
         aim: 0
@@ -49,10 +48,8 @@ fn part2(data: &[String]) -> i64 {
     status.pos.horizontal * status.pos.depth
 }
 
-pub fn solve() -> Result<(), io::Error> {
-    let data = input::get_lines_input("day2")
-        .expect("couldn't open input file for day2 (should be inputs/day2)");
+pub fn solve() {
+    let data: Vec<&str> = INPUT.lines().collect();
     println!("part1: {}", part1(&data));
     println!("part2: {}", part2(&data));
-    Ok(())
 }

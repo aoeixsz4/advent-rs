@@ -1,9 +1,8 @@
-use std::io;
-use crate::input;
 use bitvec::prelude::*;
 
 const NR_BITS: usize = 12;
 const BITMASK: u16 = 0xfff;
+const INPUT: &str = include_str!("day3.txt");
 
 fn parse_bitstring(s: &str) -> BitVec<Msb0, u16> {
     s.chars().filter_map(|c| {
@@ -11,7 +10,7 @@ fn parse_bitstring(s: &str) -> BitVec<Msb0, u16> {
     }).collect()
 }
 
-fn get_bitfields(data: &[String]) -> Vec<BitVec<Msb0, u16>> {
+fn get_bitfields(data: &[&str]) -> Vec<BitVec<Msb0, u16>> {
     data.iter().map(|s| parse_bitstring(s)).collect()
 }
 
@@ -25,7 +24,7 @@ fn get_bit_count(data: &Vec<BitVec<Msb0, u16>>, index: usize) -> usize {
     data.iter().filter(|bit_vec| bit_vec[index]).count()
 }
 
-fn part1(data: &[String]) -> i64 {
+fn part1(data: &[&str]) -> i64 {
     let bit_counts = get_bit_counts(&get_bitfields(data));
     let gamma = bit_counts.iter()
         .map(|n| *n > data.len()/2)
@@ -49,17 +48,15 @@ fn filter_bitfields(bitfields: &Vec<BitVec<Msb0, u16>>, popular: bool) -> i64 {
     0
 }
 
-fn part2(data: &[String]) -> i64 {
+fn part2(data: &[&str]) -> i64 {
     let bitfields = get_bitfields(data);
     let oxygen_generator_rating = filter_bitfields(&bitfields, true);
     let co2_scrubber_rating = filter_bitfields(&bitfields, false);
     oxygen_generator_rating * co2_scrubber_rating
 }
 
-pub fn solve() -> Result<(), io::Error> {
-    let data = input::get_lines_input("day3")
-        .expect("couldn't open input file for day3 (should be inputs/day3)");
+pub fn solve() {
+    let data: Vec<&str> = INPUT.lines().collect();
     println!("part1: {}", part1(&data));
     println!("part2: {}", part2(&data));
-    Ok(())
 }

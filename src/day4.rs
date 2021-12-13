@@ -1,5 +1,6 @@
-use std::{io, convert::TryFrom};
-use crate::input;
+use std::convert::TryFrom;
+
+const INPUT: &str = include_str!("day4.txt");
 
 struct Cell {
     value: i64,
@@ -59,8 +60,8 @@ fn count_score(board: &Board) -> i64 {
     score
 }
 
-fn common_prep(data: &[String]) -> (Vec<i64>, Vec<Board>) {
-    let mut data_iterator = data.split(|s| s.eq(""));
+fn common_prep(data: &[&str]) -> (Vec<i64>, Vec<Board>) {
+    let mut data_iterator = data.split(|s| *s == "");
     let bingo_draws = data_iterator.next().unwrap()[0].split(",").map(|s|s.parse::<i64>().unwrap()).collect::<Vec<i64>>();
     let boards = data_iterator.map(|board_slice|{
         board_slice.iter().map(|row_string|{
@@ -70,7 +71,7 @@ fn common_prep(data: &[String]) -> (Vec<i64>, Vec<Board>) {
     (bingo_draws, boards)
 }
 
-fn part1(data: &[String]) -> i64 {
+fn part1(data: &[&str]) -> i64 {
     let (bingo_draws, mut boards) = common_prep(data);
     for n in bingo_draws {
         for mut board in &mut boards {
@@ -83,7 +84,7 @@ fn part1(data: &[String]) -> i64 {
     0
 }
 
-fn part2(data: &[String]) -> i64 {
+fn part2(data: &[&str]) -> i64 {
     let (bingo_draws, mut boards) = common_prep(data);
     let mut last_winning_score = 0;
     for n in bingo_draws {
@@ -103,10 +104,8 @@ fn part2(data: &[String]) -> i64 {
     last_winning_score
 }
 
-pub fn solve() -> Result<(), io::Error> {
-    let data = input::get_lines_input("day4")
-        .expect("couldn't open input file for day4 (should be inputs/day4)");
+pub fn solve() {
+    let data: Vec<&str> = INPUT.lines().collect();
     println!("part1: {}", part1(&data));
     println!("part2: {}", part2(&data));
-    Ok(())
 }
