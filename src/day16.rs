@@ -55,6 +55,19 @@ fn consume_literal(r: &mut BitReader) {
     r.skip(4);
 }
 
+fn calculate_literal(r: &mut BitReader) -> u64 {
+    let mut ret: u64 = 0;
+    let mut nibls = Vec::new();
+    while r.shift() {
+        nibls.push(r.read(4) as u8);
+    }
+    nibls.push(r.read(4) as u8);
+    for i in 0 .. nibls.len() {
+        ret |= (nibls[nibls.len() - (i+1)] as u64) << (4 * i)
+    }
+    ret
+}
+
 fn parse_packet(r: &mut BitReader) -> u64 {
     let mut version_sum = r.read(3) as u64;
     let type_id = r.read(3);
@@ -64,7 +77,7 @@ fn parse_packet(r: &mut BitReader) -> u64 {
     }
     if r.shift() {
         let nr_packets = r.read(11);
-        for i in 0 .. nr_packets {
+        for _ in 0 .. nr_packets {
             version_sum += parse_packet(r);
         }
     } else {
@@ -78,6 +91,44 @@ fn parse_packet(r: &mut BitReader) -> u64 {
     version_sum
 }
 
+fn calculate_packet(r: &mut BitReader) -> u64 {
+    let _version = r.read(3) as u64;
+    let type_id = r.read(3);
+    let mut values = Vec::new();
+    if type_id == 4 {
+        return calculate_literal(r);
+    }
+    if r.shift() {
+        let nr_packets = r.read(11);
+        for _ in 0 .. nr_packets {
+            values.push(calculate_packet(r));
+        }
+    } else {
+        let len = r.read(15);
+        let packet_end = len as usize + r.cursor();
+        while r.cursor() != packet_end {
+            if r.cursor() > packet_end { panic!("packet size error"); }
+            values.push(calculate_packet(r));
+        }
+    }
+    match type_id {
+        0 => values.iter().sum(),
+        1 => values.iter().product(),
+        2 => *values.iter().min().unwrap(),
+        3 => *values.iter().max().unwrap(),
+        5 => {
+            if values[0] > values[1] { 1 } else { 0 }
+        },
+        6 => {
+            if values[0] < values[1] { 1 } else { 0 }
+        },
+        7 => {
+            if values[0] == values[1] { 1 } else { 0 }
+        },
+        _ => unreachable!()
+    }
+}
+
 pub fn solve() {
     let t0 = Instant::now();
     let bytes = Vec::from_hex(INPUT).expect("asdf");
@@ -87,6 +138,15 @@ pub fn solve() {
     let t1 = t0.elapsed();
     println!("part1: {}", sum);
     println!("part1 time: {:?}", t1);
+
+    let t0 = Instant::now();
+    let bytes = Vec::from_hex(INPUT).expect("asdf");
+    let bit_vec: BitVec<Msb0, u8> = BitVec::from_vec(bytes);
+    let mut reader = BitReader::new(bit_vec);
+    let sum = calculate_packet(&mut reader);
+    let t1 = t0.elapsed();
+    println!("part2: {}", sum);
+    println!("part2 time: {:?}", t1);
 }
 
 #[cfg(test)]
@@ -104,6 +164,17 @@ mod tests {
     const SOLUTION_2: u64 = 12;
     const SOLUTION_3: u64 = 23;
     const SOLUTION_4: u64 = 31;
+
+    const PART2_EXAMPLES: [(&str, u64); 8] = [
+        ("C200B40A82", 3),
+        ("04005AC33890", 54),
+        ("880086C3E88112", 7),
+        ("CE00C43D881120", 9),
+        ("D8005AC2A8F0", 1),
+        ("F600BC2D8F", 0),
+        ("9C005AC2F8F0", 0),
+        ("9C0141080250320F1802104A08", 1),
+    ];
 
     fn from_ascii_bit(enc: u8) -> u8 {
         match enc {
@@ -126,17 +197,29 @@ mod tests {
     fn test_binary_string(ex: &str) {
         let bitvec = from_binary_string(ex);
         let mut reader = BitReader::new(bitvec);
-        let sum = parse_packet(&mut reader);
+        let _sum = parse_packet(&mut reader);
+    }
+
+    fn test_calc_binary_string(ex: &str) -> u64 {
+        let bitvec = from_binary_string(ex);
+        let mut reader = BitReader::new(bitvec);
+        calculate_packet(&mut reader)
     }
 
     #[test]
     fn test_binary_parsing() {
-        let bit_vec = from_binary_string(EX_1_BIN);
+        let _bit_vec = from_binary_string(EX_1_BIN);
     }
 
     #[test]
     fn test_literal() {
         test_binary_string(EX_1_BIN);
+    }
+
+    #[test]
+    fn test_calc_literal() {
+        let value = test_calc_binary_string(EX_1_BIN);
+        assert_eq!(value, 2021);
     }
 
     #[test]
@@ -161,6 +244,17 @@ mod tests {
             let bit_vec: BitVec<Msb0, u8> = BitVec::from_vec(bytes);
             let mut reader = BitReader::new(bit_vec);
             let sum = parse_packet(&mut reader);
+            assert_eq!(sum, solution);
+        }
+    }
+
+    #[test]
+    fn test_pt2_examples() {
+        for (test_set, solution) in PART2_EXAMPLES {
+            let bytes = Vec::from_hex(test_set).expect("asdf");
+            let bit_vec: BitVec<Msb0, u8> = BitVec::from_vec(bytes);
+            let mut reader = BitReader::new(bit_vec);
+            let sum = calculate_packet(&mut reader);
             assert_eq!(sum, solution);
         }
     }
