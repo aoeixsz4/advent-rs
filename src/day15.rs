@@ -1,5 +1,6 @@
 use std::collections::HashMap;
 use std::iter::FromIterator;
+use std::time::Instant;
 use std::usize::MAX;
 const INPUT: &str = include_str!("day15.txt");
 const SIZE: usize = 100;
@@ -116,16 +117,22 @@ mod tests {
 
     #[test]
     fn test() {
-        const EXAMPLE1: &str = include_str!("day15-ex1.txt");
-        const EX_SIZE: usize = 10;
-        let grid: [[u8; EX_SIZE]; EX_SIZE] = collect_into_array(
-            EXAMPLE1.lines().map(|l|
-                collect_into_array(l.bytes()
-                    .filter(u8::is_ascii_digit)
-                    .map(|x|x - b'0'))
-            )
-        );
-        let risk_rating = get_minimum_risk_path(grid);
-        assert_eq!(risk_rating, 40);
+        const TIMES: u32 = 10;
+        let t0 = Instant::now();
+        for _ in 0 .. TIMES {
+            const EXAMPLE1: &str = include_str!("day15-ex1.txt");
+            const EX_SIZE: usize = 10;
+            let grid: [[u8; EX_SIZE]; EX_SIZE] = collect_into_array(
+                EXAMPLE1.lines().map(|l|
+                    collect_into_array(l.bytes()
+                        .filter(u8::is_ascii_digit)
+                        .map(|x|x - b'0'))
+                )
+            );
+            let risk_rating = get_minimum_risk_path(grid);
+            assert_eq!(risk_rating, 40);
+        }
+        let t1 = t0.elapsed();
+        eprintln!("{:?}", t1 / TIMES);
     }
 }
