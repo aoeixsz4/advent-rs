@@ -13,6 +13,7 @@ mod day12;
 mod day13;
 mod day14;
 mod day15;
+mod day16;
 
 use chrono::{Datelike, Utc};
 use std::env;
@@ -39,6 +40,7 @@ fn main() -> Result<(), io::Error> {
             "13" | "day13" => { println!("\t\tDAY THIRTEEN"); day13::solve(); },
             "14" | "day14" => { println!("\t\tDAY FOURTEEN"); day14::solve(); },
             "15" | "day15" => { println!("\t\tDAY FIFTEEN"); day15::solve(); },
+            "16" | "day16" => { println!("\t\tDAY SIXTEEN"); day16::solve(); },
             _ => { writeln!(io::stderr(), "unknown argument: {}", &day)?; },
         }
     }
