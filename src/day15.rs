@@ -98,38 +98,22 @@ fn get_minimum_risk_path<const N: usize>(
 }
 
 pub fn solve() {
-    const TIMES: u32 = 10;
+    const TIMES: u32 = 1000;
     let t0 = Instant::now();
+    let mut risk_rating = 0;
     for _ in 0 .. TIMES {
-        const EXAMPLE1: &str = include_str!("day15-ex1.txt");
-        const EX_SIZE: usize = 10;
-        let grid: [[u8; EX_SIZE]; EX_SIZE] = collect_into_array(
-            EXAMPLE1.lines().map(|l|
+        let grid: [[u8; SIZE]; SIZE] = collect_into_array(
+            INPUT.lines().map(|l|
                 collect_into_array(l.bytes()
                     .filter(u8::is_ascii_digit)
                     .map(|x|x - b'0'))
             )
         );
-        let risk_rating = get_minimum_risk_path(grid);
-        assert_eq!(risk_rating, 40);
+        risk_rating = get_minimum_risk_path(grid);
     }
-    let t1 = t0.elapsed();
-    eprintln!("test set: {:?}", t1 / TIMES);
-
-    let t0 = Instant::now();
-    let grid: [[u8; SIZE]; SIZE] = collect_into_array(
-        INPUT.lines().map(|l|
-            collect_into_array(l.bytes()
-                .filter(u8::is_ascii_digit)
-                .map(|x|x - b'0'))
-        )
-    );
-    let risk_rating = get_minimum_risk_path(grid);
     println!("part1: {}", risk_rating);
-
-
     let t1 = t0.elapsed();
-    eprintln!("part1 set: {:?}", t1);
+    eprintln!("part1 set: {:?}", t1 / TIMES);
 }
 
 #[cfg(test)]
