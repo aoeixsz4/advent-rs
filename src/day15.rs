@@ -1,4 +1,5 @@
 use std::collections::HashMap;
+use std::collections::btree_map::BTreeMap;
 use std::iter::FromIterator;
 use std::time::Instant;
 use std::usize::MAX;
@@ -33,8 +34,9 @@ fn search<const N: usize> (
     node: ((usize, usize), usize),
     visited: &mut HashMap<(usize, usize), usize>,
     unvisited: &mut HashMap<(usize, usize), usize>,
+    todo: &mut BTreeMap<usize, Vec<(usize, usize)>>,
     grid: &[[u8; N]; N]
-) -> Vec<(usize, usize)> {
+) {
     let (x, y, node_risk_sum) = (node.0.0 as i32, node.0.1 as i32, node.1);
     let unvisited_adjacents: Vec<(usize, usize)> = DIRS_CARDINAL.iter()
         .map(|dir| [x + dir[0], y + dir[1]])
@@ -47,30 +49,27 @@ fn search<const N: usize> (
         .collect();
     if unvisited_adjacents.len() == 0 {
         visited.remove(&(x as usize, y as usize));
-        return unvisited_adjacents;
-    }/* else {
-        println!("adjacents: {:?}", unvisited_adjacents);
-    }*/
-    for pos in unvisited_adjacents.clone() {
+    }
+    for pos in unvisited_adjacents {
         let risk_at = grid[pos.1][pos.0] as usize;
         let risk_guess = unvisited.get_mut(&pos).unwrap();
         if *risk_guess > node_risk_sum + risk_at {
-            *risk_guess = node_risk_sum + risk_at
+            *risk_guess = node_risk_sum + risk_at;
+            let queue_risk_entry = todo.entry(*risk_guess).or_insert(Vec::new());
+            queue_risk_entry.push(pos);
         }
     }
-    return unvisited_adjacents;
 }
 
 fn get_neighbours<const N: usize> (
     visited: &mut HashMap<(usize, usize), usize>,
     unvisited: &mut HashMap<(usize, usize), usize>,
+    todo: &mut BTreeMap<usize, Vec<(usize, usize)>>,
     grid: &[[u8; N]; N]
-) -> Vec<(usize, usize)> {
-    let mut neighbours = Vec::new();
+) {
     for node in visited.clone() {
-        neighbours.append(&mut search(node, visited, unvisited, grid));
+        search(node, visited, unvisited, todo, grid);
     }
-    neighbours
 }
 
 fn get_minimum_risk_path<const N: usize>(
@@ -80,21 +79,30 @@ fn get_minimum_risk_path<const N: usize>(
         (0..N).map(move |x|((x, y), MAX)
     )));
     let mut visited: HashMap<(usize, usize), usize> = HashMap::new();
+    let mut todo: BTreeMap<usize, Vec<(usize, usize)>> = BTreeMap::new();
     visited.insert((0, 0), 0);
     let mut pos = (0, 0);
     while pos != (N-1, N-1) {
+    /*for _ in 0 .. 10 {
+        println!("grid: {:?}", grid);
+        println!("pos: {:?}", pos);
+        println!("visited: {:?}", visited);
+        println!("unvisited: {:?}", unvisited);
+        println!("todo: {:?}", todo);*/
         unvisited.remove(&pos);
-        let mut nearest_unvisited = get_neighbours(&mut visited, &mut unvisited, &grid);
-        if nearest_unvisited.is_empty() {
+        get_neighbours(&mut visited, &mut unvisited, &mut todo, &grid);
+        if todo.is_empty() {
             println!("grid: {:?}", grid);
             println!("pos: {:?}", pos);
             println!("visited: {:?}", visited);
             println!("unvisited: {:?}", unvisited);
             panic!("hit a dead end :-(");
         }
-        nearest_unvisited.sort_by_key(|k|unvisited.get(k).unwrap());
-        pos = nearest_unvisited[0];
-        visited.insert(pos, *unvisited.get(&pos).unwrap());
+        let key = *todo.keys().next().unwrap();
+        let entry = todo.get_mut(&key).unwrap();
+        pos = entry.pop().unwrap();
+        if entry.is_empty() { todo.remove(&key); }
+        visited.insert(pos, key);
     }
     *visited.get(&pos).unwrap()
 }
@@ -140,7 +148,7 @@ mod tests {
 
     #[test]
     fn test() {
-        const TIMES: u32 = 10;
+        const TIMES: u32 = 1;
         let t0 = Instant::now();
         for _ in 0 .. TIMES {
             const EXAMPLE1: &str = include_str!("day15-ex1.txt");
