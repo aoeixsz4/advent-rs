@@ -31,13 +31,14 @@ const DIRS_CARDINAL: [[i32; 2]; 4] = [
 ];
 
 fn search<const N: usize> (
-    node: ((usize, usize), usize),
+    pos: (usize, usize),
     visited: &mut HashMap<(usize, usize), usize>,
     unvisited: &mut HashMap<(usize, usize), usize>,
     todo: &mut BTreeMap<usize, Vec<(usize, usize)>>,
     grid: &[[u8; N]; N]
 ) {
-    let (x, y, node_risk_sum) = (node.0.0 as i32, node.0.1 as i32, node.1);
+    let node_risk_sum = *visited.get(&pos).unwrap();
+    let (x, y) = (pos.0 as i32, pos.1 as i32);
     let unvisited_adjacents: Vec<(usize, usize)> = DIRS_CARDINAL.iter()
         .map(|dir| [x + dir[0], y + dir[1]])
         .filter(|adj|
@@ -61,17 +62,6 @@ fn search<const N: usize> (
     }
 }
 
-fn get_neighbours<const N: usize> (
-    visited: &mut HashMap<(usize, usize), usize>,
-    unvisited: &mut HashMap<(usize, usize), usize>,
-    todo: &mut BTreeMap<usize, Vec<(usize, usize)>>,
-    grid: &[[u8; N]; N]
-) {
-    for node in visited.clone() {
-        search(node, visited, unvisited, todo, grid);
-    }
-}
-
 fn get_minimum_risk_path<const N: usize>(
     grid: [[u8; N]; N]
 ) -> usize {
@@ -80,8 +70,8 @@ fn get_minimum_risk_path<const N: usize>(
     )));
     let mut visited: HashMap<(usize, usize), usize> = HashMap::new();
     let mut todo: BTreeMap<usize, Vec<(usize, usize)>> = BTreeMap::new();
-    visited.insert((0, 0), 0);
     let mut pos = (0, 0);
+    visited.insert(pos, 0);
     while pos != (N-1, N-1) {
     /*for _ in 0 .. 10 {
         println!("grid: {:?}", grid);
@@ -90,7 +80,7 @@ fn get_minimum_risk_path<const N: usize>(
         println!("unvisited: {:?}", unvisited);
         println!("todo: {:?}", todo);*/
         unvisited.remove(&pos);
-        get_neighbours(&mut visited, &mut unvisited, &mut todo, &grid);
+        search(pos, &mut visited, &mut unvisited, &mut todo, &grid);
         if todo.is_empty() {
             println!("grid: {:?}", grid);
             println!("pos: {:?}", pos);
