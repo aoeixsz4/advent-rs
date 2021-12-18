@@ -1,6 +1,8 @@
 use std::fmt::{self, Display, Formatter};
 use std::str::Chars;
 
+const INPUT: &str = include_str!("day18.txt");
+
 #[derive(Debug)]
 enum Item {
     Number(i64),
@@ -109,6 +111,13 @@ impl Item {
         }
     }
 
+    pub fn magnitude(&self) -> i64 {
+        match self {
+            Item::Number(n) => *n,
+            Item::Nested(l, r) => 3 * l.magnitude() + 2 * r.magnitude(),
+        }
+    }
+
     pub fn depth(&self) -> usize {
         self._depth(0)
     }
@@ -206,7 +215,18 @@ impl Item {
     }
 }
 
-pub fn solve() {}
+fn part1() -> i64 {
+    let mut numbers: Vec<Item> = INPUT.lines().map(Item::from_str).collect();
+    let mut tot = numbers.remove(0);
+    for num in numbers {
+        tot = tot.add(num);
+    }
+    tot.magnitude()
+}
+
+pub fn solve() {
+    println!("part1: {}", part1());
+}
 
 #[cfg(test)]
 mod tests {
@@ -214,6 +234,9 @@ mod tests {
 
     const EX1: &str = "[[[[0,7],4],[[7,8],[6,0]]],[8,1]]";
     const EX2: &str = include_str!("day18-ex2.txt");
+    const EX3: &str = include_str!("day18-ex3.txt");
+    const EX4: &str = include_str!("day18-ex4.txt");
+    const EX3_MAGS: [i64; 6] = [143, 1384, 445, 791, 1137, 3488];
 
     #[test]
     fn test() {
@@ -247,5 +270,23 @@ mod tests {
             tot = tot.add(num);
         }
         println!("result: {}", tot);
+    }
+
+    #[test]
+    fn test_magnitude() {
+        let numbers: Vec<Item> = EX3.lines().map(Item::from_str).collect();
+        for i in 0..numbers.len() {
+            assert_eq!(numbers[i].magnitude(), EX3_MAGS[i]);
+        }
+    }
+
+    #[test]
+    fn test_add_reduce_magnitude() {
+        let mut numbers: Vec<Item> = EX4.lines().map(Item::from_str).collect();
+        let mut tot = numbers.remove(0);
+        for num in numbers {
+            tot = tot.add(num);
+        }
+        assert_eq!(tot.magnitude(), 4140);
     }
 }
