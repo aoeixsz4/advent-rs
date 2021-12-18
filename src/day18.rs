@@ -1,10 +1,10 @@
-use std::str::Chars;
 use std::fmt::{self, Display, Formatter};
+use std::str::Chars;
 
 #[derive(Debug)]
 enum Item {
     Number(i64),
-    Nested(Box<Item>, Box<Item>)
+    Nested(Box<Item>, Box<Item>),
 }
 
 impl Display for Item {
@@ -15,8 +15,12 @@ impl Display for Item {
 
 impl Item {
     pub fn from_str(s: &str) -> Item {
-        let mut iter = s.strip_prefix("[").unwrap()
-            .strip_suffix("]").unwrap().chars();
+        let mut iter = s
+            .strip_prefix("[")
+            .unwrap()
+            .strip_suffix("]")
+            .unwrap()
+            .chars();
         Item::from_iter(&mut iter)
     }
 
@@ -30,7 +34,7 @@ impl Item {
                 s.push_str(&r.to_string());
                 s.push(']');
                 s
-            },
+            }
         }
     }
 
@@ -46,15 +50,15 @@ impl Item {
                     } else {
                         left = Item::from_iter(i);
                     }
-                },
+                }
                 Some(',') => {
                     //println!("got comma, looking for right elements");
                     seen_comma = true;
-                },
+                }
                 Some(']') => {
                     //println!("got ], leaving nested Item");
                     break;
-                },
+                }
                 Some(c) if c.is_ascii_digit() => {
                     //println!("got {}, inserting digit", c);
                     let n = c.to_digit(10).unwrap().into();
@@ -63,13 +67,21 @@ impl Item {
                     } else {
                         left = Item::Number(n);
                     }
-                },
+                }
                 Some(c) => panic!("invalid input: {}", c),
-                None    => break
+                None => break,
             }
         }
-        if let Item::Number(n) = left { if n == 99 { panic!("bad input, n uninitialised"); }}
-        if let Item::Number(n) = right { if n == 99 { panic!("bad input, n uninitialised"); }}
+        if let Item::Number(n) = left {
+            if n == 99 {
+                panic!("bad input, n uninitialised");
+            }
+        }
+        if let Item::Number(n) = right {
+            if n == 99 {
+                panic!("bad input, n uninitialised");
+            }
+        }
         Item::Nested(Box::new(left), Box::new(right))
     }
 
@@ -82,7 +94,7 @@ impl Item {
     fn to_num(&self) -> i64 {
         match self {
             Item::Number(n) => *n,
-            Item::Nested(_, _) => panic!("called to_num on nested") 
+            Item::Nested(_, _) => panic!("called to_num on nested"),
         }
     }
 
@@ -90,7 +102,8 @@ impl Item {
         loop {
             if self.reduce_explode() {
                 continue;
-            } if !self.reduce_split() {
+            }
+            if !self.reduce_split() {
                 break;
             }
         }
@@ -103,8 +116,7 @@ impl Item {
     fn _depth(&self, prev: usize) -> usize {
         match self {
             Item::Number(_) => prev + 1,
-            Item::Nested(l, r) =>
-                l._depth(prev+1).max(r._depth(prev+1))
+            Item::Nested(l, r) => l._depth(prev + 1).max(r._depth(prev + 1)),
         }
     }
 
@@ -114,8 +126,10 @@ impl Item {
                 if *n >= 10 {
                     *self = Item::split(n);
                     true
-                } else { false }
-            },
+                } else {
+                    false
+                }
+            }
             Item::Nested(l, r) => {
                 if l.reduce_split() {
                     true
@@ -128,14 +142,11 @@ impl Item {
 
     fn split(n: &i64) -> Item {
         let (left, right) = match n % 2 {
-            0 => ( n / 2,         n / 2 ),
-            1 => ( (n-1) / 2, (n+1) / 2 ),
-            _ => unreachable!()
+            0 => (n / 2, n / 2),
+            1 => ((n - 1) / 2, (n + 1) / 2),
+            _ => unreachable!(),
         };
-        Item::Nested(
-            Box::new(Item::Number(left)),
-            Box::new(Item::Number(right))
-        )
+        Item::Nested(Box::new(Item::Number(left)), Box::new(Item::Number(right)))
     }
 
     fn reduce_explode(&mut self) -> bool {
@@ -174,9 +185,7 @@ impl Item {
     fn explode(&mut self) -> (i64, i64) {
         let res = match self {
             Item::Number(_) => panic!("can't explode a number"),
-            Item::Nested(l, r) => {
-                (l.to_num(), r.to_num())
-            }
+            Item::Nested(l, r) => (l.to_num(), r.to_num()),
         };
         *self = Item::Number(0);
         res
@@ -185,20 +194,19 @@ impl Item {
     fn add_left(&mut self, x: i64) {
         match self {
             Item::Number(n) => *n += x,
-            Item::Nested(l, _) => l.add_left(x)
+            Item::Nested(l, _) => l.add_left(x),
         }
     }
 
     fn add_right(&mut self, x: i64) {
         match self {
             Item::Number(n) => *n += x,
-            Item::Nested(_, r) => r.add_right(x)
+            Item::Nested(_, r) => r.add_right(x),
         }
     }
 }
 
-pub fn solve() {
-}
+pub fn solve() {}
 
 #[cfg(test)]
 mod tests {
@@ -216,8 +224,10 @@ mod tests {
         let baz = foo.add(bar);
         println!("after adding [1,2]: {}", baz);
 
-        let mut sample = "[1,1]\n[2,2]\n[3,3]\n[4,4]".lines()
-            .map(Item::from_str).collect::<Vec<Item>>();
+        let mut sample = "[1,1]\n[2,2]\n[3,3]\n[4,4]"
+            .lines()
+            .map(Item::from_str)
+            .collect::<Vec<Item>>();
         let mut tot = sample.remove(0);
         for num in sample {
             tot = tot.add(num);
@@ -231,8 +241,7 @@ mod tests {
 
     #[test]
     fn test_add_reduce() {
-        let mut numbers: Vec<Item> = EX2.lines()
-            .map(Item::from_str).collect();
+        let mut numbers: Vec<Item> = EX2.lines().map(Item::from_str).collect();
         let mut tot = numbers.remove(0);
         for num in numbers {
             tot = tot.add(num);
