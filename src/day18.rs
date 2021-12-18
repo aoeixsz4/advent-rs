@@ -1,209 +1,117 @@
 use std::fmt::{self, Display, Formatter};
 use std::str::Chars;
 
-#[derive(Debug)]
-enum Item {
-    Number(i64),
-    Nested(Box<Item>, Box<Item>),
+fn from_str(s: &str) -> Vec<(i64, i64)> {
+    let mut depth = 0;
+    let mut out: Vec<(i64, i64)> = Vec::new();
+    for c in s.chars() {
+        match c {
+            '[' => depth += 1,
+            ']' => depth -= 1,
+            ',' => (),
+            d if d.is_ascii_digit() => {
+                let n = d.to_digit(10).unwrap() as i64;
+                out.push((n, depth));
+            }
+            _ => panic!("bad input"),
+        }
+    }
+    out
 }
 
-impl Display for Item {
-    fn fmt(&self, f: &mut Formatter<'_>) -> fmt::Result {
-        write!(f, "{}", self.to_string())
-    }
-}
-
-impl Item {
-    pub fn from_str(s: &str) -> Item {
-        let mut iter = s
-            .strip_prefix("[")
-            .unwrap()
-            .strip_suffix("]")
-            .unwrap()
-            .chars();
-        Item::from_iter(&mut iter)
-    }
-
-    pub fn to_string(&self) -> String {
-        match &self {
-            Item::Number(n) => n.to_string(),
-            Item::Nested(l, r) => {
-                let mut s = String::from("[");
-                s.push_str(&l.to_string());
-                s.push(',');
-                s.push_str(&r.to_string());
+fn to_string(vec: &Vec<(i64, i64)>) -> String {
+    let mut s = String::new();
+    let mut depth = 0;
+    let mut left = true;
+    let mut last_depth = Vec::new();
+    for node in vec {
+        if node.1 > depth {
+            last_depth.push(depth);
+            left = true;
+            while node.1 > depth {
+                s.push('[');
+                depth += 1;
+            }
+        } else if node.1 < depth {
+            left = false;
+            while node.1 < depth {
                 s.push(']');
-                s
+                depth -= 1;
+            }
+        } else if left {
+            s.push(',');
+            left = false;
+        } else if let Some(foo) = last_depth.pop() {
+            if foo == node.1 {
+                s.push(',');
             }
         }
+        s.push_str(&node.0.to_string());
     }
+    s
+}
 
-    pub fn from_iter(i: &mut Chars) -> Item {
-        let mut seen_comma = false;
-        let (mut left, mut right) = (Item::Number(99), Item::Number(99));
-        loop {
-            match i.next() {
-                Some('[') => {
-                    //println!("got [, entering nested Item");
-                    if seen_comma {
-                        right = Item::from_iter(i);
-                    } else {
-                        left = Item::from_iter(i);
-                    }
-                }
-                Some(',') => {
-                    //println!("got comma, looking for right elements");
-                    seen_comma = true;
-                }
-                Some(']') => {
-                    //println!("got ], leaving nested Item");
-                    break;
-                }
-                Some(c) if c.is_ascii_digit() => {
-                    //println!("got {}, inserting digit", c);
-                    let n = c.to_digit(10).unwrap().into();
-                    if seen_comma {
-                        right = Item::Number(n);
-                    } else {
-                        left = Item::Number(n);
-                    }
-                }
-                Some(c) => panic!("invalid input: {}", c),
-                None => break,
+fn reduce(vec: &mut Vec<(i64, i64)>) {
+    loop {
+        if reduce_explode(vec) {
+            continue;
+        }
+        if !reduce_split(vec) {
+            break;
+        }
+    }
+}
+
+fn reduce_split(vec: &mut Vec<(i64, i64)>) -> bool {
+    for i in 0..vec.len() {
+        if vec[i].0 >= 10 {
+            let (l, r) = split(&vec[i].0);
+            let depth = vec[i].1;
+            vec.insert(i + 1, (r, depth + 1));
+            vec[i].0 = l;
+            vec[i].1 = depth + 1;
+            return true;
+        }
+    }
+    false
+}
+
+fn split(n: &i64) -> (i64, i64) {
+    match n % 2 {
+        0 => (n / 2, n / 2),
+        1 => ((n - 1) / 2, (n + 1) / 2),
+        _ => unreachable!(),
+    }
+}
+
+fn reduce_explode(vec: &mut Vec<(i64, i64)>) -> bool {
+    for i in 0..vec.len() {
+        if vec[i].1 >= 4 {
+            let (l, r) = explode(vec, i);
+            if i > 0 {
+                vec[i].0 = l;
             }
-        }
-        if let Item::Number(n) = left {
-            if n == 99 {
-                panic!("bad input, n uninitialised");
+            if i < vec.len() - 1 {
+                vec[i + 1].0 = r;
             }
-        }
-        if let Item::Number(n) = right {
-            if n == 99 {
-                panic!("bad input, n uninitialised");
-            }
-        }
-        Item::Nested(Box::new(left), Box::new(right))
-    }
-
-    pub fn add(self, other: Item) -> Item {
-        let mut outer = Item::Nested(Box::new(self), Box::new(other));
-        outer.reduce();
-        outer
-    }
-
-    fn to_num(&self) -> i64 {
-        match self {
-            Item::Number(n) => *n,
-            Item::Nested(_, _) => panic!("called to_num on nested"),
+            return true;
         }
     }
+    false
+}
 
-    pub fn reduce(&mut self) {
-        loop {
-            if self.reduce_explode() {
-                continue;
-            }
-            if !self.reduce_split() {
-                break;
-            }
-        }
+fn explode(vec: &mut Vec<(i64, i64)>, i: usize) -> (i64, i64) {
+    if i + 1 >= vec.len() {
+        panic!("tried to explode out of bounds");
     }
-
-    pub fn depth(&self) -> usize {
-        self._depth(0)
+    let (l, depth) = vec.remove(i);
+    if vec[i].1 != depth {
+        panic!("exploded non-number pair");
     }
-
-    fn _depth(&self, prev: usize) -> usize {
-        match self {
-            Item::Number(_) => prev + 1,
-            Item::Nested(l, r) => l._depth(prev + 1).max(r._depth(prev + 1)),
-        }
-    }
-
-    fn reduce_split(&mut self) -> bool {
-        match self {
-            Item::Number(n) => {
-                if *n >= 10 {
-                    *self = Item::split(n);
-                    true
-                } else {
-                    false
-                }
-            }
-            Item::Nested(l, r) => {
-                if l.reduce_split() {
-                    true
-                } else {
-                    r.reduce_split()
-                }
-            }
-        }
-    }
-
-    fn split(n: &i64) -> Item {
-        let (left, right) = match n % 2 {
-            0 => (n / 2, n / 2),
-            1 => ((n - 1) / 2, (n + 1) / 2),
-            _ => unreachable!(),
-        };
-        Item::Nested(Box::new(Item::Number(left)), Box::new(Item::Number(right)))
-    }
-
-    fn reduce_explode(&mut self) -> bool {
-        let (res, _, _) = self._reduce_explode(0);
-        res
-    }
-
-    fn _reduce_explode(&mut self, depth: usize) -> (bool, Option<i64>, Option<i64>) {
-        match self {
-            Item::Number(_) => return (false, None, None),
-            Item::Nested(l, r) => {
-                if depth >= 4 {
-                    //println!("depth {} at nested pair {}, try explode", depth, &self.to_string());
-                    let (exp_l, exp_r) = self.explode();
-                    return (true, Some(exp_l), Some(exp_r));
-                }
-                let (l_res, l_exp_l, l_exp_r) = l._reduce_explode(depth + 1);
-                if l_res {
-                    if let Some(carry) = l_exp_r {
-                        r.add_left(carry);
-                    }
-                    return (true, l_exp_l, None);
-                }
-                let (r_res, r_exp_l, r_exp_r) = r._reduce_explode(depth + 1);
-                if r_res {
-                    if let Some(carry) = r_exp_l {
-                        l.add_right(carry);
-                    }
-                    return (true, None, r_exp_r);
-                }
-            }
-        }
-        (false, None, None)
-    }
-
-    fn explode(&mut self) -> (i64, i64) {
-        let res = match self {
-            Item::Number(_) => panic!("can't explode a number"),
-            Item::Nested(l, r) => (l.to_num(), r.to_num()),
-        };
-        *self = Item::Number(0);
-        res
-    }
-
-    fn add_left(&mut self, x: i64) {
-        match self {
-            Item::Number(n) => *n += x,
-            Item::Nested(l, _) => l.add_left(x),
-        }
-    }
-
-    fn add_right(&mut self, x: i64) {
-        match self {
-            Item::Number(n) => *n += x,
-            Item::Nested(_, r) => r.add_right(x),
-        }
-    }
+    vec[i].1 = depth - 1;
+    let r = vec[i].1;
+    vec[i].0 = 0;
+    (l, r)
 }
 
 pub fn solve() {}
@@ -217,35 +125,36 @@ mod tests {
 
     #[test]
     fn test() {
-        let mut foo = Item::from_str(EX1);
-        let bar = Item::from_str("[1,2]");
-        println!("foo: {}, depth: {}", foo, foo.depth());
-        assert_eq!(EX1, &foo.to_string());
-        let baz = foo.add(bar);
-        println!("after adding [1,2]: {}", baz);
+        let mut foo = from_str(EX1);
+        let mut bar = from_str("[1,2]");
+        //println!("foo: {}, depth: idk", &to_string(&foo));
+        //println!("foo: {:?}, depth: idk", foo);
+        assert_eq!(EX1, &to_string(&foo));
+        foo.append(&mut bar);
+        println!("after adding [1,2]: {}", &to_string(&foo));
 
         let mut sample = "[1,1]\n[2,2]\n[3,3]\n[4,4]"
             .lines()
-            .map(Item::from_str)
-            .collect::<Vec<Item>>();
-        let mut tot = sample.remove(0);
-        for num in sample {
-            tot = tot.add(num);
-        }
-        assert_eq!(&tot.to_string(), "[[[[1,1],[2,2]],[3,3]],[4,4]]");
-        tot = tot.add(Item::from_str("[5,5]"));
-        assert_eq!(&tot.to_string(), "[[[[3,0],[5,3]],[4,4]],[5,5]]");
-        tot = tot.add(Item::from_str("[6,6]"));
-        assert_eq!(&tot.to_string(), "[[[[5,0],[7,4]],[5,5]],[6,6]]");
+            .map(from_str)
+            .collect::<Vec<Vec<(i64, i64)>>>();
+        //let mut tot = sample.remove(0);
+        //for num in sample.iter_mut() {
+        //    tot = tot.append(num);
+        //}
+        //assert_eq!(&tot.to_string(), "[[[[1,1],[2,2]],[3,3]],[4,4]]");
+        //tot = tot.add(Item::from_str("[5,5]"));
+        //assert_eq!(&tot.to_string(), "[[[[3,0],[5,3]],[4,4]],[5,5]]");
+        //tot = tot.add(Item::from_str("[6,6]"));
+        //assert_eq!(&tot.to_string(), "[[[[5,0],[7,4]],[5,5]],[6,6]]");
     }
 
     #[test]
     fn test_add_reduce() {
-        let mut numbers: Vec<Item> = EX2.lines().map(Item::from_str).collect();
+        let mut numbers: Vec<Vec<(i64, i64)>> = EX2.lines().map(from_str).collect();
         let mut tot = numbers.remove(0);
-        for num in numbers {
-            tot = tot.add(num);
+        for num in numbers.iter_mut() {
+            tot.append(num);
         }
-        println!("result: {}", tot);
+        println!("result: {}", &to_string(&tot));
     }
 }
