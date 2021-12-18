@@ -2,8 +2,10 @@ use std::collections::HashMap;
 use std::iter::FromIterator;
 const INPUT: &str = include_str!("day14.txt");
 
-fn get_pairs<'a> (s: &'a str) -> Vec<&'a str> {
-    (0..(s.len()-1)).map(|i|&s[i..i+2]).collect::<Vec<&'a str>>()
+fn get_pairs<'a>(s: &'a str) -> Vec<&'a str> {
+    (0..(s.len() - 1))
+        .map(|i| &s[i..i + 2])
+        .collect::<Vec<&'a str>>()
 }
 
 fn recurse(
@@ -23,30 +25,46 @@ fn recurse(
         assert_eq!(rule.len(), 2);
         *new_counts.entry(rule[0].clone()).or_default() += count;
         *new_counts.entry(rule[1].clone()).or_default() += count;
-        *single_counts.entry(rule[1].chars().nth(0).unwrap()).or_default() += count;
+        *single_counts
+            .entry(rule[1].chars().next().unwrap())
+            .or_default() += count;
     }
     recurse(new_counts, rules, times, single_counts, recursion_count)
 }
 
 fn run(primer: &str, s: &str, times: usize) -> u64 {
-    let rules: HashMap<String, Vec<String>> = HashMap::from_iter(s.lines().map(|l|{
+    let rules: HashMap<String, Vec<String>> = HashMap::from_iter(s.lines().map(|l| {
         let (left, right) = l.split_once(" -> ").unwrap();
         assert_eq!(left.len(), 2);
         assert_eq!(right.len(), 1);
-        let a = String::from_iter([left.chars().nth(0).unwrap(), right.chars().nth(0).unwrap()].iter());
-        let b = String::from_iter([right.chars().nth(0).unwrap(), left.chars().nth(1).unwrap()].iter());
+        let a =
+            String::from_iter([left.chars().nth(1).unwrap(), right.chars().next().unwrap()].iter());
+        let b =
+            String::from_iter([right.chars().next().unwrap(), left.chars().nth(1).unwrap()].iter());
         (left.to_string(), vec![a, b])
-    }).into_iter());
+    }));
     let mut single_counts: HashMap<char, u64> = HashMap::new();
     for c in primer.chars() {
         *single_counts.entry(c).or_default() += 1;
     }
     let init_pairs = get_pairs(primer);
-    let counts: HashMap<String, u64> = HashMap::from_iter(rules.keys().map(|k|{
-        (k.clone(), init_pairs.iter().filter(|pair|pair.to_string() == *k).count() as u64)
-    }).into_iter());
+    let counts: HashMap<String, u64> = HashMap::from_iter(rules.keys().map(|k| {
+        (
+            k.clone(),
+            init_pairs
+                .iter()
+                .filter(|pair| pair.to_string() == *k)
+                .count() as u64,
+        )
+    }));
     let mut recursion_count = 0;
-    recurse(counts,  rules, times, &mut single_counts, &mut recursion_count);
+    recurse(
+        counts,
+        rules,
+        times,
+        &mut single_counts,
+        &mut recursion_count,
+    );
     single_counts.values().max().unwrap() - single_counts.values().min().unwrap()
 }
 

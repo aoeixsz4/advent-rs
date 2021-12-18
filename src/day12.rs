@@ -1,4 +1,7 @@
-use std::{collections::{HashMap, HashSet}, time::Instant};
+use std::{
+    collections::{HashMap, HashSet},
+    time::Instant,
+};
 
 const INPUT: &str = include_str!("day12.txt");
 
@@ -6,11 +9,18 @@ fn is_lower(name: &str) -> bool {
     name.as_bytes().iter().all(u8::is_ascii_lowercase)
 }
 
-fn visit<'a> (system: &HashMap<&str, HashSet<&'a str>>, node: &'a str, visited: &mut HashSet<&'a str>, smol: &mut &'a str) -> usize {
-    if node == "end" { return 1; }
+fn visit<'a>(
+    system: &HashMap<&str, HashSet<&'a str>>,
+    node: &'a str,
+    visited: &mut HashSet<&'a str>,
+    smol: &mut &'a str,
+) -> usize {
+    if node == "end" {
+        return 1;
+    }
     if is_lower(node) {
         if visited.contains(node) {
-            if smol.len() != 0 {
+            if !smol.is_empty() {
                 return 0;
             } else {
                 *smol = node;
@@ -19,9 +29,13 @@ fn visit<'a> (system: &HashMap<&str, HashSet<&'a str>>, node: &'a str, visited: 
             visited.insert(node);
         }
     }
-    let count = system.get(node).unwrap().iter().filter(|dest|**dest != "start").map(|dest|{
-        visit(system, dest, visited, smol)
-    }).sum();
+    let count = system
+        .get(node)
+        .unwrap()
+        .iter()
+        .filter(|dest| **dest != "start")
+        .map(|dest| visit(system, dest, visited, smol))
+        .sum();
     if is_lower(node) {
         if *smol != node {
             visited.remove(&node);

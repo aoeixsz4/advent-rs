@@ -3,9 +3,13 @@ const SIZE_Y: usize = 10;
 const SIZE_X: usize = 10;
 
 fn parse_input(data: &[&str]) -> Vec<Vec<i64>> {
-    data.iter().map(|line| {
-        line.split("").filter_map(|d|d.parse::<i64>().ok()).collect::<Vec<i64>>()
-    }).collect::<Vec<Vec<i64>>>()
+    data.iter()
+        .map(|line| {
+            line.split("")
+                .filter_map(|d| d.parse::<i64>().ok())
+                .collect::<Vec<i64>>()
+        })
+        .collect::<Vec<Vec<i64>>>()
 }
 
 fn increment_all(octopus_grid: &mut Vec<Vec<i64>>) {
@@ -19,8 +23,8 @@ fn increment_all(octopus_grid: &mut Vec<Vec<i64>>) {
 fn cascade_flashers(octopus_grid: &mut Vec<Vec<i64>>) -> i64 {
     let mut flasher_stack: Vec<(usize, usize)> = Vec::new();
     let mut flasher_count = 0;
-    for y in 0 .. 10 {
-        for x in 0 .. 10 {
+    for y in 0..10 {
+        for x in 0..10 {
             if octopus_grid[y][x] > 9 {
                 flasher_stack.push((y, x));
                 flasher_count += 1;
@@ -29,60 +33,60 @@ fn cascade_flashers(octopus_grid: &mut Vec<Vec<i64>>) -> i64 {
     }
     while let Some((y, x)) = flasher_stack.pop() {
         if y > 0 && x > 0 {
-            if octopus_grid[y-1][x-1] == 9 {
-                flasher_stack.push((y-1, x-1));
+            if octopus_grid[y - 1][x - 1] == 9 {
+                flasher_stack.push((y - 1, x - 1));
                 flasher_count += 1;
             }
-            octopus_grid[y-1][x-1] += 1;
+            octopus_grid[y - 1][x - 1] += 1;
         }
         if y > 0 {
-            if octopus_grid[y-1][x] == 9 {
-                flasher_stack.push((y-1, x));
+            if octopus_grid[y - 1][x] == 9 {
+                flasher_stack.push((y - 1, x));
                 flasher_count += 1;
             }
-            octopus_grid[y-1][x] += 1;
+            octopus_grid[y - 1][x] += 1;
         }
         if y > 0 && x < SIZE_X - 1 {
-            if octopus_grid[y-1][x+1] == 9 {
-                flasher_stack.push((y-1, x+1));
+            if octopus_grid[y - 1][x + 1] == 9 {
+                flasher_stack.push((y - 1, x + 1));
                 flasher_count += 1;
             }
-            octopus_grid[y-1][x+1] += 1;
+            octopus_grid[y - 1][x + 1] += 1;
         }
         if x > 0 {
-            if octopus_grid[y][x-1] == 9 {
-                flasher_stack.push((y, x-1));
+            if octopus_grid[y][x - 1] == 9 {
+                flasher_stack.push((y, x - 1));
                 flasher_count += 1;
             }
-            octopus_grid[y][x-1] += 1;
+            octopus_grid[y][x - 1] += 1;
         }
         if x < SIZE_X - 1 {
-            if octopus_grid[y][x+1] == 9 {
-                flasher_stack.push((y, x+1));
+            if octopus_grid[y][x + 1] == 9 {
+                flasher_stack.push((y, x + 1));
                 flasher_count += 1;
             }
-            octopus_grid[y][x+1] += 1;
+            octopus_grid[y][x + 1] += 1;
         }
         if y < SIZE_Y - 1 && x > 0 {
-            if octopus_grid[y+1][x-1] == 9 {
-                flasher_stack.push((y+1, x-1));
+            if octopus_grid[y + 1][x - 1] == 9 {
+                flasher_stack.push((y + 1, x - 1));
                 flasher_count += 1;
             }
-            octopus_grid[y+1][x-1] += 1;
+            octopus_grid[y + 1][x - 1] += 1;
         }
         if y < SIZE_Y - 1 {
-            if octopus_grid[y+1][x] == 9 {
-                flasher_stack.push((y+1, x));
+            if octopus_grid[y + 1][x] == 9 {
+                flasher_stack.push((y + 1, x));
                 flasher_count += 1;
             }
-            octopus_grid[y+1][x] += 1;
+            octopus_grid[y + 1][x] += 1;
         }
         if y < SIZE_Y - 1 && x < SIZE_X - 1 {
-            if octopus_grid[y+1][x+1] == 9 {
-                flasher_stack.push((y+1, x+1));
+            if octopus_grid[y + 1][x + 1] == 9 {
+                flasher_stack.push((y + 1, x + 1));
                 flasher_count += 1;
             }
-            octopus_grid[y+1][x+1] += 1;
+            octopus_grid[y + 1][x + 1] += 1;
         }
     }
     flasher_count
@@ -91,15 +95,19 @@ fn cascade_flashers(octopus_grid: &mut Vec<Vec<i64>>) -> i64 {
 fn zero_flashed(octopus_grid: &mut Vec<Vec<i64>>) {
     for row in octopus_grid {
         for octopus in row {
-            if *octopus > 9 { *octopus = 0; }
+            if *octopus > 9 {
+                *octopus = 0;
+            }
         }
     }
 }
 
-fn is_all_zero(octopus_grid: &Vec<Vec<i64>>) -> bool {
+fn is_all_zero(octopus_grid: &[Vec<i64>]) -> bool {
     for row in octopus_grid {
         for octopus in row {
-            if *octopus != 0 { return false; }
+            if *octopus != 0 {
+                return false;
+            }
         }
     }
     true
@@ -108,7 +116,7 @@ fn is_all_zero(octopus_grid: &Vec<Vec<i64>>) -> bool {
 fn part1(data: &[&str]) -> i64 {
     let mut flashed_count = 0;
     let mut octopus_grid = parse_input(data);
-    for _i in 0 .. 100 {
+    for _i in 0..100 {
         increment_all(&mut octopus_grid);
         flashed_count += cascade_flashers(&mut octopus_grid);
         zero_flashed(&mut octopus_grid);
@@ -119,11 +127,13 @@ fn part1(data: &[&str]) -> i64 {
 fn part2(data: &[&str]) -> i64 {
     let mut flashed_count = 0;
     let mut octopus_grid = parse_input(data);
-    for i in 0 .. 1000 {
+    for i in 0..1000 {
         increment_all(&mut octopus_grid);
         flashed_count += cascade_flashers(&mut octopus_grid);
         zero_flashed(&mut octopus_grid);
-        if is_all_zero(&octopus_grid) { return i + 1; }
+        if is_all_zero(&octopus_grid) {
+            return i + 1;
+        }
     }
     flashed_count
 }

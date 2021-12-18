@@ -10,21 +10,29 @@ fn score_line(line: &str) -> i64 {
             '<' => open_token_stack.push('<'),
             ')' => {
                 let last_token = open_token_stack.pop().unwrap();
-                if last_token != '(' { return 3; }
-            },
+                if last_token != '(' {
+                    return 3;
+                }
+            }
             ']' => {
                 let last_token = open_token_stack.pop().unwrap();
-                if last_token != '[' { return 57; }
-            },
+                if last_token != '[' {
+                    return 57;
+                }
+            }
             '}' => {
                 let last_token = open_token_stack.pop().unwrap();
-                if last_token != '{' { return 1197; }
-            },
+                if last_token != '{' {
+                    return 1197;
+                }
+            }
             '>' => {
                 let last_token = open_token_stack.pop().unwrap();
-                if last_token != '<' { return 25137; }
-            },
-            _ => unreachable!()
+                if last_token != '<' {
+                    return 25137;
+                }
+            }
+            _ => unreachable!(),
         }
     }
     0
@@ -40,47 +48,56 @@ fn get_completion_string(line: &str) -> Option<String> {
             '<' => open_token_stack.push('<'),
             ')' => {
                 let last_token = open_token_stack.pop().unwrap();
-                if last_token != '(' { return None; }
-            },
+                if last_token != '(' {
+                    return None;
+                }
+            }
             ']' => {
                 let last_token = open_token_stack.pop().unwrap();
-                if last_token != '[' { return None; }
-            },
+                if last_token != '[' {
+                    return None;
+                }
+            }
             '}' => {
                 let last_token = open_token_stack.pop().unwrap();
-                if last_token != '{' { return None; }
-            },
+                if last_token != '{' {
+                    return None;
+                }
+            }
             '>' => {
                 let last_token = open_token_stack.pop().unwrap();
-                if last_token != '<' { return None; }
-            },
-            _ => unreachable!()
+                if last_token != '<' {
+                    return None;
+                }
+            }
+            _ => unreachable!(),
         }
     }
     Some(
-        open_token_stack.iter().rev()
-        .map(|c|{
-            match c {
+        open_token_stack
+            .iter()
+            .rev()
+            .map(|c| match c {
                 '(' => ')',
                 '[' => ']',
                 '{' => '}',
                 '<' => '>',
-                _ => unreachable!()
-            }
-        }).collect::<String>()
+                _ => unreachable!(),
+            })
+            .collect::<String>(),
     )
 }
 
 fn score_completion_string(comp: &str) -> i64 {
-    comp.chars().map(|c| match c {
-        ')' => 1,
-        ']' => 2,
-        '}' => 3,
-        '>' => 4,
-        _ => unreachable!()
-    }).fold(0, |acc, x| {
-        acc * 5 + x
-    })
+    comp.chars()
+        .map(|c| match c {
+            ')' => 1,
+            ']' => 2,
+            '}' => 3,
+            '>' => 4,
+            _ => unreachable!(),
+        })
+        .fold(0, |acc, x| acc * 5 + x)
 }
 
 fn part1(data: &[&str]) -> i64 {
@@ -88,15 +105,17 @@ fn part1(data: &[&str]) -> i64 {
 }
 
 fn part2(data: &[&str]) -> i64 {
-    let mut scores = data.iter().filter_map(|l|
-        get_completion_string(l)
-    ).map(|completion|
-        score_completion_string(&completion)
-    ).collect::<Vec<i64>>();
-    scores.sort();
+    let mut scores = data
+        .iter()
+        .filter_map(|l| get_completion_string(l))
+        .map(|completion| score_completion_string(&completion))
+        .collect::<Vec<i64>>();
+    scores.sort_unstable();
     let len = scores.len();
-    if len % 2 != 1 { panic!("number of scores isn't odd!"); }
-    scores[(len-1)/2]
+    if len % 2 != 1 {
+        panic!("number of scores isn't odd!");
+    }
+    scores[(len - 1) / 2]
 }
 
 pub fn solve() {

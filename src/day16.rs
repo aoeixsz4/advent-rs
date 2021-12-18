@@ -1,19 +1,19 @@
-use std::time::Instant;
-use hex::FromHex;
 use bitvec::prelude::*;
+use hex::FromHex;
+use std::time::Instant;
 
 const INPUT: &str = include_str!("day16.txt");
 
 struct BitReader {
     bitvec: BitVec<Msb0, u8>,
-    cursor: usize
+    cursor: usize,
 }
 
 impl BitReader {
     pub fn new(bv: BitVec<Msb0, u8>) -> BitReader {
         BitReader {
             bitvec: bv,
-            cursor: 0
+            cursor: 0,
         }
     }
 
@@ -23,18 +23,20 @@ impl BitReader {
         ret
     }
 
-    pub fn read (&mut self, n: usize) -> u16 {
-        if n > 16 { panic!("cannot read more than 16 bits at once"); }
+    pub fn read(&mut self, n: usize) -> u16 {
+        if n > 16 {
+            panic!("cannot read more than 16 bits at once");
+        }
         let mut ret = 0u16;
         let bit_slice = self.read_bits(n);
-        for i in 0 .. n {
-            ret |= (bit_slice[i] as u16) << (n-1) - i;
+        for i in 0..n {
+            ret |= ((bit_slice[i] as u16) << (n - 1)) - i as u16;
         }
         ret
     }
 
-    pub fn read_bits<'a> (&'a mut self, n: usize) -> &'a BitSlice<Msb0, u8> {
-        let ret = &self.bitvec[self.cursor..self.cursor+n];
+    pub fn read_bits(&mut self, n: usize) -> &BitSlice<Msb0, u8> {
+        let ret = &self.bitvec[self.cursor..self.cursor + n];
         self.cursor += n;
         ret
     }
@@ -62,8 +64,8 @@ fn calculate_literal(r: &mut BitReader) -> u64 {
         nibls.push(r.read(4) as u8);
     }
     nibls.push(r.read(4) as u8);
-    for i in 0 .. nibls.len() {
-        ret |= (nibls[nibls.len() - (i+1)] as u64) << (4 * i)
+    for i in 0..nibls.len() {
+        ret |= (nibls[nibls.len() - (i + 1)] as u64) << (4 * i)
     }
     ret
 }
@@ -77,14 +79,16 @@ fn parse_packet(r: &mut BitReader) -> u64 {
     }
     if r.shift() {
         let nr_packets = r.read(11);
-        for _ in 0 .. nr_packets {
+        for _ in 0..nr_packets {
             version_sum += parse_packet(r);
         }
     } else {
         let len = r.read(15);
         let packet_end = len as usize + r.cursor();
         while r.cursor() != packet_end {
-            if r.cursor() > packet_end { panic!("packet size error"); }
+            if r.cursor() > packet_end {
+                panic!("packet size error");
+            }
             version_sum += parse_packet(r);
         }
     }
@@ -100,14 +104,16 @@ fn calculate_packet(r: &mut BitReader) -> u64 {
     }
     if r.shift() {
         let nr_packets = r.read(11);
-        for _ in 0 .. nr_packets {
+        for _ in 0..nr_packets {
             values.push(calculate_packet(r));
         }
     } else {
         let len = r.read(15);
         let packet_end = len as usize + r.cursor();
         while r.cursor() != packet_end {
-            if r.cursor() > packet_end { panic!("packet size error"); }
+            if r.cursor() > packet_end {
+                panic!("packet size error");
+            }
             values.push(calculate_packet(r));
         }
     }
@@ -117,15 +123,27 @@ fn calculate_packet(r: &mut BitReader) -> u64 {
         2 => *values.iter().min().unwrap(),
         3 => *values.iter().max().unwrap(),
         5 => {
-            if values[0] > values[1] { 1 } else { 0 }
-        },
+            if values[0] > values[1] {
+                1
+            } else {
+                0
+            }
+        }
         6 => {
-            if values[0] < values[1] { 1 } else { 0 }
-        },
+            if values[0] < values[1] {
+                1
+            } else {
+                0
+            }
+        }
         7 => {
-            if values[0] == values[1] { 1 } else { 0 }
-        },
-        _ => unreachable!()
+            if values[0] == values[1] {
+                1
+            } else {
+                0
+            }
+        }
+        _ => unreachable!(),
     }
 }
 
@@ -180,18 +198,22 @@ mod tests {
         match enc {
             b'0' => 0,
             b'1' => 1,
-            _ => panic!("not an ASCII bit")
+            _ => panic!("not an ASCII bit"),
         }
     }
 
     fn from_binary_string(s: &str) -> BitVec<Msb0, u8> {
-        if s.bytes().any(|b|b != b'0' && b != b'1') { panic!("not a binary string"); }
+        if s.bytes().any(|b| b != b'0' && b != b'1') {
+            panic!("not a binary string");
+        }
         let byte_string = s.as_bytes();
-        assert_eq!(byte_string.len()%8, 0);
-        BitVec::from_vec(byte_string.chunks(8)
-            .map(|byte| {
-                (0..8).map(move |i| from_ascii_bit(byte[i]) << 7-i).sum()
-            }).collect::<Vec<u8>>())
+        assert_eq!(byte_string.len() % 8, 0);
+        BitVec::from_vec(
+            byte_string
+                .chunks(8)
+                .map(|byte| (0..8).map(move |i| from_ascii_bit(byte[i]) << 7 - i).sum())
+                .collect::<Vec<u8>>(),
+        )
     }
 
     fn test_binary_string(ex: &str) {
