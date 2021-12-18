@@ -3,7 +3,7 @@ use std::str::Chars;
 
 const INPUT: &str = include_str!("day18.txt");
 
-#[derive(Debug)]
+#[derive(Clone, Debug)]
 enum Item {
     Number(i64),
     Nested(Box<Item>, Box<Item>),
@@ -18,9 +18,9 @@ impl Display for Item {
 impl Item {
     pub fn from_str(s: &str) -> Item {
         let mut iter = s
-            .strip_prefix("[")
+            .strip_prefix('[')
             .unwrap()
-            .strip_suffix("]")
+            .strip_suffix(']')
             .unwrap()
             .chars();
         Item::from_iter(&mut iter)
@@ -224,8 +224,31 @@ fn part1() -> i64 {
     tot.magnitude()
 }
 
+fn test_pair(a: &Item, b: &Item) -> i64 {
+    let (A, B) = (a.clone(), b.clone());
+    let sum = A.add(B);
+    let res_a = sum.magnitude();
+    let (A, B) = (a.clone(), b.clone());
+    let res_b = A.add(B).magnitude();
+    res_a.max(res_b)
+}
+
+fn part2() -> i64 {
+    let mut numbers: Vec<Item> = INPUT.lines().map(Item::from_str).collect();
+    let mut max_mag = 0;
+    for i in 0..numbers.len() {
+        for j in 0..numbers.len() {
+            if i != j {
+                max_mag = test_pair(&numbers[i], &numbers[j]).max(max_mag);
+            }
+        }
+    }
+    max_mag
+}
+
 pub fn solve() {
     println!("part1: {}", part1());
+    println!("part2: {}", part2());
 }
 
 #[cfg(test)]
