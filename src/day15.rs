@@ -149,7 +149,7 @@ pub fn solve() {
     }
     println!("part2: {}", risk_rating);
     let t1 = t0.elapsed();
-    eprintln!("part2 set: {:?}", t1 / TIMES2);
+    println!("part2 set: {:?}", t1 / TIMES2);
 }
 
 #[cfg(test)]
