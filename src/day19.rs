@@ -240,9 +240,46 @@ fn part1(txt: &str) -> usize {
         for (i, scanner) in scans_copy.iter_mut().enumerate() {
             let beac_pairs = distance_pairs(scanner);
             let matching_pairs = get_pairs(&canon_beac_pairs, &beac_pairs);
-            if let Some((_coords, mut corrected_beacs)) =
+            if let Some((coords, mut corrected_beacs)) =
                 try_rotations(&beacons_canon, scanner, &matching_pairs, &rots)
             {
+                //println!("{} beacs", scanner.len());
+                println!(
+                    "got coords ({}, {}, {}) for scanner {}",
+                    coords.0, coords.1, coords.2, i
+                );
+                /*println!(
+                    "original beacs: {:?}, corrected beacs other csanner: {:?}",
+                    beacons_canon, corrected_beacons
+                );*/
+                beacons_canon.append(&mut corrected_beacs);
+                scanners.remove(i);
+                //println!("standard beacons: {}", beacons_canon.len());
+                break;
+            }
+        }
+    }
+    //beacons_canon.sort();
+    //println!("{:?}", beacons_canon);
+    beacons_canon.len()
+}
+
+fn part2(txt: &str) -> i64 {
+    let mut scanners = get_scanners(txt);
+    let mut scanner_coords = Vec::new();
+    let mut beacons_canon = scanners.remove(0);
+    let mut canon_beac_pairs: Vec<(Vec<usize>, i64)>;
+    let rots = gen_rot_matrices();
+    while !scanners.is_empty() {
+        canon_beac_pairs = distance_pairs(&beacons_canon);
+        let mut scans_copy = scanners.clone();
+        for (i, scanner) in scans_copy.iter_mut().enumerate() {
+            let beac_pairs = distance_pairs(scanner);
+            let matching_pairs = get_pairs(&canon_beac_pairs, &beac_pairs);
+            if let Some((coords, mut corrected_beacs)) =
+                try_rotations(&beacons_canon, scanner, &matching_pairs, &rots)
+            {
+                scanner_coords.push(coords);
                 //println!("{} beacs", scanner.len());
                 /*println!(
                     "got coords ({}, {}, {}) for scanner {} with 12 matches and {} new beacons",
@@ -263,15 +300,23 @@ fn part1(txt: &str) -> usize {
             }
         }
     }
-    beacons_canon.len()
+    (0..scanner_coords.len())
+        .combinations(2)
+        .map(|pair| {
+            (scanner_coords[pair[0]].0 - scanner_coords[pair[1]].0).abs()
+                + (scanner_coords[pair[0]].1 - scanner_coords[pair[1]].1).abs()
+                + (scanner_coords[pair[0]].2 - scanner_coords[pair[1]].2).abs()
+        })
+        .max()
+        .unwrap()
 }
 
 pub fn solve() {
     let t0 = Instant::now();
-    let pt1 = part1(INPUT);
-    println!("part1: {}", pt1);
+    let pt1 = part2(INPUT);
+    println!("part2: {}", pt1);
     let t1 = t0.elapsed();
-    //println!("part2: {}", part2());
+    println!("part2 time: {:?}", t1);
 }
 
 #[cfg(test)]
@@ -282,10 +327,16 @@ mod tests {
 
     #[test]
     fn test() {
-        const TIMES: u32 = 10;
+        const TIMES: u32 = 1;
         let t0 = Instant::now();
         for _ in 0..TIMES {
             assert_eq!(part1(EX2), 79);
+        }
+        let t1 = t0.elapsed();
+        println!("duration: {:?}", t1 / TIMES);
+        let t0 = Instant::now();
+        for _ in 0..TIMES {
+            assert_eq!(part2(EX2), 3621);
         }
         let t1 = t0.elapsed();
         println!("duration: {:?}", t1 / TIMES);
