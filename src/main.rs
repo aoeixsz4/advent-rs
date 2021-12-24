@@ -10,6 +10,7 @@ mod day17;
 mod day18;
 mod day19;
 mod day2;
+mod day20;
 mod day3;
 mod day4;
 mod day5;
@@ -105,6 +106,10 @@ fn main() -> Result<(), io::Error> {
             "19" | "day19" => {
                 println!("\t\tDAY NINETEEN");
                 day19::solve();
+            }
+            "20" | "day20" => {
+                println!("\t\tDAY TWENTY");
+                day20::solve();
             }
             _ => {
                 writeln!(io::stderr(), "unknown argument: {}", &day)?;
